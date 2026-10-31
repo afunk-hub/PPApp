@@ -1,0 +1,11 @@
+Prairie Preludes Creator Studio v1.0.07 patch
+
+1. Before deployment, open the current app and export a JSON backup.
+2. Extract this ZIP into the repository working folder, replacing index.html, sw.js, and manifest.webmanifest.
+3. Add PrairiePreludes1.0.07.html and RELEASE_NOTES_1.0.07.md to the repository root.
+4. Keep the existing logo and icon image files. Do not delete other repository files.
+5. Commit and push the changes, then wait for GitHub Pages deployment to complete.
+6. Reopen or refresh the app. If an installed PWA still shows the old version, fully close/reopen it or clear the site's cached data.
+7. In Creative library, open Footage asset record. Filming Setup should appear as a dropdown with exactly four selectable setups.
+
+This is a partial patch, not a full site package. Records remain in browser local storage and are not included in this ZIP. Export a JSON backup before updating.
