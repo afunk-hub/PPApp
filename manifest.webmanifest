@@ -1,8 +1,8 @@
 {
   "name": "Prairie Preludes Creator Studio",
   "short_name": "Prairie Studio",
-  "description": "Prairie Preludes Creator Studio 1.0.02 \u2014 video planning, creative assets, analytics, and copyright tracking.",
-  "start_url": "./PrairiePreludes1.0.02.html",
+  "description": "Prairie Preludes Creator Studio 1.0.03 \u2014 video planning, creative assets, analytics, and copyright tracking.",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f4f0e7",
