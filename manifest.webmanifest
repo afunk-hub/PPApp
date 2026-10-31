@@ -1,0 +1,24 @@
+{
+  "name": "Prairie Preludes Creator Studio",
+  "short_name": "Prairie Studio",
+  "description": "Prairie Preludes Creator Studio 1.0.02 \u2014 video planning, creative assets, analytics, and copyright tracking.",
+  "start_url": "./PrairiePreludes1.0.02.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f0e7",
+  "theme_color": "#e9e4d8",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
