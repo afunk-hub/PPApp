@@ -1,0 +1,12 @@
+Prairie Preludes Creator Studio — Patch 1.0.05
+
+Apply to the existing GitHub repository:
+1. Replace index.html with the included index.html.
+2. Add PrairiePreludes1.0.05.html to the repository (keep older versioned HTML files if you want a release archive).
+3. Replace sw.js and manifest.webmanifest with the included versions.
+4. Add RELEASE_NOTES_1.0.05.md.
+5. Commit and push the changes to GitHub.
+
+Unchanged logos, icons, and other files are intentionally omitted.
+
+Important: This patch updates the app files only. It does not contain or migrate browser-local records. Export a JSON backup from the current app before deploying. After deployment, refresh/reopen the app; if an installed PWA appears stale, close it and reopen it so the updated service worker can activate.

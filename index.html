@@ -124,6 +124,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:20px}
 <div class="row"><div class="field"><label for="uTitle">Video title *</label><input id="uTitle" required placeholder="Sunrise over the prairie"></div><div class="field"><label for="uDate">Publish date *</label><input id="uDate" type="date" required></div></div>
 <div class="row"><div class="field"><label for="uGenre">Genre / scene type</label><select id="uGenre"><option>Sunrise & sunset</option><option>Prairie landscapes</option><option>Weather & seasons</option><option>Farm life</option><option>Wildlife</option><option>Garden & flowers</option><option>Other</option></select></div><div class="field"><label for="uUrl">Video URL (optional)</label><input id="uUrl" type="url" placeholder="https://…"></div></div>
 <div class="field"><label for="uPlatform">Platform</label><select id="uPlatform"><option>YouTube</option><option>Instagram</option><option>Facebook</option><option>TikTok</option><option value="All">All platforms — create one entry per platform</option></select></div>
+<div class="field"><label for="uAssets">Footage assets used in this video edit</label><select id="uAssets" multiple size="4" aria-describedby="uAssetsHelp"></select><div id="uAssetsHelp" class="sub">Select one or more source footage records. Hold Ctrl (Windows) or use multi-select gestures on mobile if supported. You can also update associations after saving.</div></div>
 <div class="actions"><button class="primary" type="submit">Save video entry</button><button class="secondary" type="button" id="resetUpload">Clear form</button></div>
 </form></div>
 <div class="card"><h3>Video entries</h3><div id="uploadTable" class="tablewrap"></div></div>
@@ -233,7 +234,7 @@ document.getElementById('rYear').value=new Date().getFullYear();
 const platforms=['YouTube','Instagram','Facebook','TikTok'];
 document.getElementById('uploadForm').addEventListener('submit',e=>{
  e.preventDefault();
- const chosen=val('uPlatform'), common={title:val('uTitle'),publishDate:val('uDate'),genre:val('uGenre'),url:val('uUrl')};
+ const chosen=val('uPlatform'), common={title:val('uTitle'),publishDate:val('uDate'),genre:val('uGenre'),url:val('uUrl'),assetIds:[...document.getElementById('uAssets').selectedOptions].map(o=>o.value)};
  const targets=chosen==='All'?platforms:[chosen];
  targets.forEach(platform=>db.uploads.push({id:crypto.randomUUID(),...common,platform}));
  save();e.target.reset();document.getElementById('uDate').value=today();
@@ -265,7 +266,17 @@ function editAsset(id){const a=db.assets.find(x=>x.id===id);if(!a)return;editing
 
 function del(type,id){if(confirm('Delete this record?')){db[type]=db[type].filter(x=>x.id!==id);if(type==='assets'&&editingAssetId===id)resetAssetForm();save()}}
 function renderUploads(){
- document.getElementById('uploadTable').innerHTML=table(['Video / platform','Published','Genre','URL',''],db.uploads.slice().reverse().map(v=>`<tr><td><b>${esc(v.title)}</b><div class="sub">${esc(v.platform)}</div></td><td>${esc(v.publishDate)}</td><td>${esc(v.genre)}</td><td>${v.url?`<a href="${esc(v.url)}" target="_blank" rel="noopener">Open video</a>`:'—'}</td><td><button class="secondary danger" onclick="del('uploads','${v.id}')">Delete</button></td></tr>`));
+ document.getElementById('uploadTable').innerHTML=table(['Video / platform','Published','Genre','Associated footage','URL','Actions'],db.uploads.slice().reverse().map(v=>{const assets=(v.assetIds||[]).map(id=>db.assets.find(a=>a.id===id)).filter(Boolean);return `<tr><td><b>${esc(v.title)}</b><div class="sub">${esc(v.platform)}</div></td><td>${esc(v.publishDate)}</td><td>${esc(v.genre)}</td><td>${assets.length?assets.map(a=>esc(a.title)).join('<br>'):'<span class="sub">No assets linked</span>'}</td><td>${v.url?`<a href="${esc(v.url)}" target="_blank" rel="noopener">Open video</a>`:'—'}</td><td><button class="secondary" onclick="editUploadAssets('${v.id}')">Edit footage links</button> <button class="secondary danger" onclick="del('uploads','${v.id}')">Delete</button></td></tr>`}));
+}
+function editUploadAssets(id){
+ const v=db.uploads.find(x=>x.id===id);if(!v)return;
+ if(!db.assets.length){alert('Add footage assets in the Creative library first.');return}
+ const list=db.assets.map((a,i)=>`${i+1}. ${a.title} [${a.id.slice(0,8)}]`).join('\n');
+ const current=(v.assetIds||[]).map(x=>db.assets.findIndex(a=>a.id===x)+1).filter(n=>n>0).join(', ');
+ const answer=prompt(`Select footage numbers to associate with "${v.title}". Enter comma-separated numbers, or leave blank for none.\n\n${list}`,current);
+ if(answer===null)return;
+ const nums=answer.split(',').map(x=>Number(x.trim())).filter(n=>Number.isInteger(n)&&n>=1&&n<=db.assets.length);
+ v.assetIds=[...new Set(nums)].map(n=>db.assets[n-1].id);save();
 }
 function renderSnapshots(){
  let f=val('snapshotFilter')||'',list=db.snapshots.filter(s=>{let v=db.uploads.find(x=>x.id===s.videoId);return v&&(!f||v.platform===f)}).slice().reverse();
@@ -281,10 +292,12 @@ function renderInsights(){
 }
 function updateLibrarySelects(){
  const options=(items,empty)=>`<option value="">${empty}</option>`+items.map(x=>`<option value="${esc(x.id)}">${esc(x.title)}</option>`).join('');
- const m=document.getElementById('pMusic'),a=document.getElementById('pAsset'),mv=document.getElementById('mVideoId');
- const oldM=m.value,oldA=a.value,oldV=mv.value;
+ const m=document.getElementById('pMusic'),a=document.getElementById('pAsset'),mv=document.getElementById('mVideoId'),ua=document.getElementById('uAssets');
+ const oldM=m.value,oldA=a.value,oldV=mv.value,oldUA=[...ua.selectedOptions].map(o=>o.value);
  m.innerHTML=options(db.music,'No music selected');a.innerHTML=options(db.assets,'No footage selected');mv.innerHTML=options(db.uploads,'No video linked');
+ ua.innerHTML=db.assets.map(x=>`<option value="${esc(x.id)}">${esc(x.title)}${x.recordedDate?' — '+esc(x.recordedDate):''}</option>`).join('');
  if([...m.options].some(o=>o.value===oldM))m.value=oldM;if([...a.options].some(o=>o.value===oldA))a.value=oldA;if([...mv.options].some(o=>o.value===oldV))mv.value=oldV;
+ [...ua.options].forEach(o=>o.selected=oldUA.includes(o.value));
 }
 function renderPlans(){
  const stageOrder={'Idea':0,'Planned':1,'In production':2,'Ready to publish':3,'Published':4};
@@ -305,7 +318,10 @@ function publishPlan(id){
  p.platforms.forEach(platform=>{let existing=db.uploads.find(v=>v.planId===p.id&&v.platform===platform);if(existing){videoIds.push(existing.id);return}const v={id:crypto.randomUUID(),title:p.title,publishDate:today(),genre:p.genre||'Other',url:'',platform,planId:p.id,musicId:p.musicId||'',assetId:p.assetId||''};db.uploads.push(v);videoIds.push(v.id)});
  p.videoIds=videoIds;p.status='Entries created';save();alert('Video-tracking entries created with today as the publication date. The app did not publish online. Add metric snapshots when available.');
 }
-function renderAssets(){document.getElementById('assetTable').innerHTML=table(['Asset / recorded','Capture details','Length / filter','Original file location','Notes','Actions'],db.assets.slice().reverse().map(a=>`<tr><td><b>${esc(a.title)}</b><div class="sub">${esc(a.recordedDate||'—')}</div></td><td>${esc(a.camera||'—')}<div class="sub">${esc(a.format||'')} · ${esc(a.weather||'')}</div><div class="sub">${esc(a.location||'')}</div></td><td>${esc(a.videoLength||'—')}<div class="sub">Filter: ${esc(a.videoFilter||'—')}</div></td><td>${esc(a.fileLocation||'—')}</td><td>${esc(a.notes||'')}</td><td><button class="secondary" onclick="editAsset('${a.id}')">Edit</button> <button class="secondary danger" onclick="del('assets','${a.id}')">Delete</button></td></tr>`))}
+function renderAssets(){
+ const usage=a=>db.uploads.filter(v=>(v.assetIds||[]).includes(a.id));
+ document.getElementById('assetTable').innerHTML=table(['Asset / recorded','Capture details','Length / filter','Usage','Original file location','Notes','Actions'],db.assets.slice().reverse().map(a=>{const uses=usage(a);const dates=uses.map(v=>v.publishDate).filter(Boolean).sort();const last=dates[dates.length-1];const first=dates[0];const edits=new Set(uses.map(v=>`${v.title}|${v.publishDate}`)).size;return `<tr><td><b>${esc(a.title)}</b><div class="sub">${esc(a.recordedDate||'—')} · ID ${esc(a.id.slice(0,8))}</div></td><td>${esc(a.camera||'—')}<div class="sub">${esc(a.format||'')} · ${esc(a.weather||'')}</div><div class="sub">${esc(a.location||'')}</div></td><td>${esc(a.videoLength||'—')}<div class="sub">Filter: ${esc(a.videoFilter||'—')}</div></td><td><b>${edits}</b> unique ${edits===1?'video edit':'video edits'}<div class="sub">${uses.length} platform ${uses.length===1?'entry':'entries'}</div><div class="sub">First: ${esc(first||'—')} · Last: ${esc(last||'—')}</div>${uses.length?`<details><summary>View uploads (${uses.length})</summary>${uses.map(v=>`<div class="sub">${esc(v.title)} · ${esc(v.platform)} · ${esc(v.publishDate||'—')}${v.url?` · <a href="${esc(v.url)}" target="_blank" rel="noopener">Open</a>`:''}</div>`).join('')}</details>`:'<div class="sub">Not used yet</div>'}</td><td>${esc(a.fileLocation||'—')}</td><td>${esc(a.notes||'')}</td><td><button class="secondary" onclick="editAsset('${a.id}')">Edit</button> <button class="secondary danger" onclick="del('assets','${a.id}')">Delete</button></td></tr>`}))
+}
 function renderCopies(){document.getElementById('copyTable').innerHTML=table(['Found','Work / platform','Status','Suspected URL & notes',''],db.copies.slice().reverse().map(c=>{let m=db.music.find(x=>x.id===c.workId);return `<tr><td>${esc(c.date)}</td><td>${esc(m?.title||'Unlinked work')}<br>${esc(c.platform)}</td><td>${esc(c.status)}</td><td><a href="${esc(c.url)}" target="_blank" rel="noopener">Open suspected copy</a><div class="sub">${esc(c.evidence)} ${esc(c.action)}</div></td><td><button class="secondary danger" onclick="del('copies','${c.id}')">Delete</button></td></tr>`}))}
 function renderReviews(){document.getElementById('reviewTable').innerHTML=table(['Quarter','What worked','Learnings','Next steps',''],db.reviews.slice().reverse().map(r=>`<tr><td><b>${esc(r.quarter)} ${esc(r.year)}</b><div class="sub">${esc(r.saved)}</div></td><td>${esc(r.wins)}</td><td>${esc(r.learn)}</td><td>${esc(r.next)}<div class="sub">${esc(r.notes)}</div></td><td><button class="secondary danger" onclick="del('reviews','${r.id}')">Delete</button></td></tr>`))}
 function renderChart(el,items){let max=Math.max(1,...items.map(x=>x.value));el.innerHTML=items.length?items.map(x=>`<div class="barrow"><span>${esc(x.label)}</span><div class="bar"><i style="width:${Math.max(0,x.value)/max*100}%"></i></div><b>${fmt(x.value)}</b></div>`).join(''):'<div class="empty">Add snapshots to see analytics.</div>'}
@@ -381,7 +397,7 @@ function render(){
  renderChart(document.getElementById('genreChart'),[...new Set(db.uploads.map(v=>v.genre))].map(g=>({label:g,value:db.snapshots.filter(s=>s.window==='lifetime'&&db.uploads.find(v=>v.id===s.videoId)?.genre===g).reduce((a,s)=>a+s.views,0)})));
  updateVideoSelect();renderUploads();renderSnapshots();renderMonthly();renderMusic();renderCopies();renderReviews();updateWorkSelects();renderChecklist();
 }
-document.getElementById('exportBtn').onclick=()=>{const stamp=new Date().toISOString();localStorage.setItem('prairie-preludes-last-backup',stamp);download('prairie-preludes-backup-1.0.04-'+today()+'.json',JSON.stringify({app:'Prairie Preludes Creator Studio',version:'1.0.04',exportedAt:stamp,data:db},null,2),'application/json');renderBackupStatus()};
+document.getElementById('exportBtn').onclick=()=>{const stamp=new Date().toISOString();localStorage.setItem('prairie-preludes-last-backup',stamp);download('prairie-preludes-backup-1.0.05-'+today()+'.json',JSON.stringify({app:'Prairie Preludes Creator Studio',version:'1.0.05',exportedAt:stamp,data:db},null,2),'application/json');renderBackupStatus()};
 document.getElementById('exportCsv').onclick=()=>{let rows=[['title','platform','publishDate','genre','url','window','snapshotDate','views','likes','comments','shares','watchMinutes','followersGained'],...db.snapshots.map(s=>{let v=db.uploads.find(x=>x.id===s.videoId)||{};return [v.title,v.platform,v.publishDate,v.genre,v.url,s.window,s.snapshotDate,s.views,s.likes,s.comments,s.shares,s.watch,s.followers]})];download('prairie-preludes-metrics-1.0.04-'+today()+'.csv',rows.map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(',')).join('\r\n'),'text/csv')};
 function download(name,data,type){let a=document.createElement('a'),u=URL.createObjectURL(new Blob([data],{type}));a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);document.getElementById('backupMsg').textContent='Export started: '+name}
 function normalizeIncoming(x){let incoming=x?.data||x;if(incoming.videos&&!incoming.uploads){let uploads=[],snapshots=[];incoming.videos.forEach(v=>{let u={id:v.id||crypto.randomUUID(),title:v.title,publishDate:v.publishDate,genre:v.genre,url:v.url,platform:v.platform};uploads.push(u);snapshots.push({id:crypto.randomUUID(),videoId:u.id,window:v.window||'24h',snapshotDate:v.snapshotDate||v.publishDate,views:v.views||0,likes:v.likes||0,comments:v.comments||0,shares:v.shares||0,watch:v.watch||0,followers:v.followers||0})});incoming={...incoming,uploads,snapshots}}return {...blank(),...incoming,uploads:Array.isArray(incoming.uploads)?incoming.uploads:[],snapshots:Array.isArray(incoming.snapshots)?incoming.snapshots:[],music:Array.isArray(incoming.music)?incoming.music:[],copies:Array.isArray(incoming.copies)?incoming.copies:[],reviews:Array.isArray(incoming.reviews)?incoming.reviews:[],plans:Array.isArray(incoming.plans)?incoming.plans:[],assets:Array.isArray(incoming.assets)?incoming.assets:[],evidence:incoming.evidence&&typeof incoming.evidence==='object'?incoming.evidence:{}}}
