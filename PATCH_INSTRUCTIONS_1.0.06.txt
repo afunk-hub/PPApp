@@ -1,0 +1,10 @@
+Prairie Preludes Creator Studio v1.0.06 patch
+
+1. Make a JSON backup from the running app before deploying.
+2. Extract this ZIP.
+3. Replace index.html, sw.js, and manifest.webmanifest in the GitHub Pages repository root.
+4. Add PrairiePreludes1.0.06.html and RELEASE_NOTES_1.0.06.md.
+5. Commit and push, then wait for GitHub Pages deployment to complete.
+6. Open the live site and select the new Footage Usage tab.
+
+This is a partial patch, not a full site package. Keep all unchanged images/icons and other repository files. Records remain in browser local storage and are not included in this ZIP.
