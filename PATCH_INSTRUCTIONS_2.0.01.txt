@@ -1,0 +1,12 @@
+Prairie Preludes Creator Studio 2.0.01 — Deployment
+
+1. Keep your existing ZIPs and do not clear browser/site data.
+2. Download and unzip this package.
+3. In the GitHub repository root, upload/replace the files from this package. Keep the existing image assets and manifest in the root.
+4. Ensure both index.html and PrairiePreludes2.0.01.html are present at the repository root.
+5. Commit and wait for deployment to complete.
+6. Open https://afunk-hub.github.io/PPApp/ and confirm version 2.0.01 appears in Backup & Settings/footer.
+7. Before rebuilding the footage catalog, test with one temporary sample record, export a JSON backup, and confirm the downloaded file exists in My Files > Downloads. Then import that backup into a clean test only if needed; do not clear live data to test.
+8. After rebuilding real records, export JSON backups regularly and retain copies outside the app.
+
+The safety copy is a recovery aid for a missing/corrupt primary key, not cloud backup. Clearing site data can remove both copies.
