@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prairie Preludes — Read-only Storage Diagnostic</title>
+<style>
+:root{color-scheme:light dark}body{font:16px/1.5 system-ui,sans-serif;max-width:820px;margin:0 auto;padding:22px}h1{font-size:1.4rem}p,li{max-width:75ch}.warn{border:1px solid #b7791f;border-radius:10px;padding:12px}.card{border:1px solid #8888;border-radius:10px;padding:14px;margin:12px 0}button{font:inherit;padding:10px 14px;border-radius:8px;margin:6px 6px 6px 0}code,pre{overflow-wrap:anywhere;white-space:pre-wrap}table{border-collapse:collapse;width:100%}th,td{text-align:left;border-bottom:1px solid #8888;padding:8px;overflow-wrap:anywhere}small{opacity:.8}
+</style></head>
+<body>
+<h1>Prairie Preludes Creator Studio — Read-only Storage Diagnostic</h1>
+<div class="warn"><strong>Read-only:</strong> this page does not change, clear, repair, or overwrite browser storage. It only reads storage for this website origin and reports key names, sizes, and record counts. It does not include footage titles or other record contents in the report.</div>
+<p>Run this page in Chrome at the same <code>https://afunk-hub.github.io/PPApp/</code> site where the catalog was previously used. The path of this diagnostic page does not matter; the website origin does.</p>
+<div id="status" class="card">Reading local storage…</div>
+<div class="card"><h2>Storage keys</h2><div id="results"></div></div>
+<button id="download">Download diagnostic report (JSON)</button>
+<button id="refresh">Recheck storage</button>
+<p><small>Do not use a “clear”, “reset”, or “repair” feature while investigating. This diagnostic intentionally has none.</small></p>
+<script>
+(function(){
+ const targetKeys=['prairie-preludes-creator-studio-v2','prairie-preludes-creator-studio-v1','prairie-preludes-last-backup'];
+ let report;
+ function counts(value){
+   const result={jsonParseable:true,topLevelType:Array.isArray(value)?'array':(value===null?'null':typeof value)};
+   if(value&&typeof value==='object'&&!Array.isArray(value)){
+     for(const k of ['uploads','snapshots','music','copies','reviews','plans','assets']) if(Array.isArray(value[k])) result[k]=value[k].length;
+     if(value.evidence&&typeof value.evidence==='object') result.evidenceEntries=Object.keys(value.evidence).length;
+     if(value.data&&typeof value.data==='object'){
+       result.nestedDataCounts={};
+       for(const k of ['uploads','snapshots','music','copies','reviews','plans','assets']) if(Array.isArray(value.data[k])) result.nestedDataCounts[k]=value.data[k].length;
+       if(value.data.evidence&&typeof value.data.evidence==='object') result.nestedDataCounts.evidenceEntries=Object.keys(value.data.evidence).length;
+     }
+   }
+   return result;
+ }
+ function scan(){
+   const rows=[]; let storageError=null;
+   try{
+     const keys=[]; for(let i=0;i<localStorage.length;i++) keys.push(localStorage.key(i));
+     for(const key of keys){
+       let raw=''; try{raw=localStorage.getItem(key)||'';}catch(e){}
+       const row={key,characters:raw.length,approxBytes:new Blob([raw]).size};
+       try{row.content=counts(JSON.parse(raw));}catch(e){row.content={jsonParseable:false};}
+       rows.push(row);
+     }
+   }catch(e){storageError=String(e&&e.message||e);}
+   report={diagnostic:'Prairie Preludes read-only storage diagnostic',generatedAt:new Date().toISOString(),origin:location.origin,path:location.pathname,storageError,targetKeys:Object.fromEntries(targetKeys.map(k=>{const r=rows.find(x=>x.key===k);return [k,r?{present:true,characters:r.characters,approxBytes:r.approxBytes,content:r.content}:{present:false}]})),allKeys:rows.map(({key,characters,approxBytes,content})=>({key,characters,approxBytes,content}))};
+   document.getElementById('status').innerHTML='<strong>Origin:</strong> <code>'+escapeHtml(location.origin)+'</code><br><strong>Path:</strong> <code>'+escapeHtml(location.pathname)+'</code><br><strong>Keys found:</strong> '+rows.length+(storageError?'<br><strong>Storage read error:</strong> '+escapeHtml(storageError):'');
+   const table=document.createElement('table'); table.innerHTML='<thead><tr><th>Key</th><th>Approx. size</th><th>Parsed data counts</th></tr></thead>';
+   const tbody=document.createElement('tbody');
+   if(!rows.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="3">No local-storage keys were found for this origin.</td>';tbody.appendChild(tr)}
+   for(const r of rows){const tr=document.createElement('tr');const c=r.content.jsonParseable?Object.entries(r.content).filter(([k])=>!['jsonParseable','topLevelType'].includes(k)).map(([k,v])=>k+': '+(typeof v==='object'?JSON.stringify(v):v)).join(', ')||'JSON parsed; no known record arrays':'Not valid JSON';tr.innerHTML='<td><code>'+escapeHtml(r.key)+'</code></td><td>'+r.approxBytes.toLocaleString()+' bytes</td><td>'+escapeHtml(c)+'</td>';tbody.appendChild(tr)}
+   table.appendChild(tbody); const out=document.getElementById('results');out.replaceChildren(table);
+ }
+ function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+ document.getElementById('refresh').addEventListener('click',scan);
+ document.getElementById('download').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='prairie-preludes-storage-diagnostic.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)});
+ scan();
+})();
+</script></body></html>
