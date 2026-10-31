@@ -1,0 +1,12 @@
+Prairie Preludes Creator Studio 2.0.00 — Deployment
+
+1. Download and unzip this package.
+2. Back up existing local app data from Backup & Settings before upgrading.
+3. Upload/replace the repository root files with the package contents. Keep the image assets and manifest in the root.
+4. Confirm both index.html and PrairiePreludes2.0.00.html are present at the repository root.
+5. Commit and allow the existing deployment to finish.
+6. Open Creator Studio and confirm the footer/version information shows 2.0.00.
+7. Check Command Center, Projects & planner, Footage usage, uploads, analytics, music/copyright, and Backup & settings.
+8. Verify existing project and footage records are still present before deleting any old package files.
+
+This is a standard release checklist, not a response to any prior Creator Studio deployment problem. Existing browser-local data remains in the same local storage key.

@@ -1,7 +1,7 @@
 {
   "name": "Prairie Preludes Creator Studio",
   "short_name": "Prairie Studio",
-  "description": "Prairie Preludes Creator Studio 1.0.07 \u2014 video planning, creative assets, analytics, and copyright tracking.",
+  "description": "Prairie Preludes Creator Studio 2.0.00 \u2014 connected content projects, footage, publishing, analytics, and copyright tracking.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
