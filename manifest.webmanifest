@@ -1,21 +1,21 @@
 {
   "name": "Prairie Preludes Creator Studio",
   "short_name": "Prairie Studio",
-  "description": "Prairie Preludes Creator Studio 2.0.01 \u2014 backup resilience and recovery improvements.",
-  "start_url": "./",
+  "description": "Prairie Preludes content planning, video analytics, creative library, and copyright tracking.",
+  "start_url": "./PrairiePreludes2.0.02.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f4f0e7",
   "theme_color": "#e9e4d8",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
