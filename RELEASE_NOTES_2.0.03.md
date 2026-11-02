@@ -1,35 +1,42 @@
 # Prairie Preludes Creator Studio — Release 2.0.03
 
 **Release date:** November 2, 2026  
-**Release type:** Revision release — service-worker cache and update correction
+**Baseline:** User-supplied complete `PrairiePreludes2.0.01` patch ZIP.  
+**Release approach:** Additive changes only; preserve the full 2.0.01 application workflow and existing storage identifiers.
 
-## Changes
-- Corrected the service worker so it searches only the current release's cache instead of all browser caches.
-- Explicitly retires older Prairie Preludes cache namespaces, including the legacy `prairie-preludes-1.0.07` cache and previous `prairie-preludes-creator-studio-*` caches.
-- Uses network-first handling for page navigations, with the current release cache as an offline fallback.
-- Requests service-worker script updates without relying on the browser HTTP cache and calls `registration.update()` when the page loads.
-- Reloads the page after a new service worker takes control so the updated app shell is displayed.
-- Retains the 2.0.02 Recording Speed feature and the 2.0.01 secondary recovery-copy and data-visibility safeguards.
+## Preserved from 2.0.01
+- Creator Command Center and its active-project, upcoming-deadline, unused-footage, publishing, pipeline, and project-attention summaries.
+- Content Projects workflow, including editing existing projects, shot lists, captions, hashtags, editing/delivery notes, linked records, and status tracking.
+- Existing navigation, creative library, footage usage, analytics, uploads, snapshots, original music, copyright/evidence tracking, copying log, quarterly reviews, and Backup & Settings.
+- Primary database key `prairie-preludes-creator-studio-v2`.
+- Secondary recovery key `prairie-preludes-creator-studio-v2-safety-copy` and its existing recovery behavior.
+- Full JSON backup/restore and merge/replace behavior, with existing data categories and IDs retained.
 
-## Data compatibility and preservation
-- No database schema changes are made in this release.
-- All existing data categories, local-storage keys, JSON export/import behavior, and recovery-copy behavior are retained from 2.0.02.
-- The service worker clears only caches with Prairie Preludes-specific names; it does not clear localStorage or IndexedDB application records.
-- Keep the external JSON backup. The service-worker cache is not a data backup.
+## Changes in 2.0.03
+- Includes all 2.0.02 application changes, including Recording Speed.
+- Refined service-worker cache isolation and update activation.
+- Service-worker cache cleanup is limited to Prairie Preludes cache namespaces; unrelated site caches are left untouched.
+- Page navigations use network-first behavior with `cache: no-store`; the current release cache and `index.html` provide offline fallback.
+- Service-worker registration bypasses the HTTP cache for update checks and reloads once when a new controller takes control.
+- GitHub Pages requires only `index.html`; the versioned HTML file remains in the release archive only.
+
+## File layout and deployment
+
+- `GitHub-Pages/` contains the complete deployment payload. Upload **the contents of this folder** into the existing GitHub Pages `PPApp/` directory.
+- `GitHub-Pages/` intentionally contains `index.html` only; it does not contain `PrairiePreludes2.0.03.html`.
+- `Release-Archive/PrairiePreludes2.0.03.html` is the versioned archival copy. Do not upload it to GitHub Pages.
+- The service worker uses a release-specific cache, network-first page navigations and cache-first asset requests, explicit update checks, and an offline fallback to `index.html`. It deletes only Prairie Preludes caches.
+
+## Data compatibility and safety
+- No database key changes.
+- The 2.0.01 safety-copy key is retained; no migration away from it is performed.
+- Existing data arrays and record IDs are preserved. New `recordingSpeed` is backfilled to `1` for older footage records.
+- JSON export/restore includes the complete database object. Media files themselves are not embedded in JSON backups.
+- Do not clear Chrome site data or uninstall the installed app to deploy this update. Keep the external JSON backup.
 
 ## Verification
-- Added the missing `PrairiePreludes2.0.03.html` release-named copy; it is byte-for-byte identical to `index.html` and satisfies the service worker's pre-cache list.
-- JavaScript syntax checked.
-- Service-worker syntax checked.
+- Application inline JavaScript syntax checked.
+- Service-worker JavaScript syntax checked.
+- `index.html` and the versioned archive HTML are byte-for-byte identical.
+- Service-worker pre-cache list contains only files present in `GitHub-Pages/`.
 - ZIP integrity checked.
-- Required PWA files included: manifest, service worker, and both icons.
-
-## Deployment
-1. Extract this ZIP.
-2. Upload the CONTENTS of the `PPApp-main` folder into the **same existing `PPApp` folder** in the GitHub Pages repository. Do not create a nested `PPApp-main` folder.
-3. Replace the existing files when prompted, including `index.html`, `PrairiePreludes2.0.03.html`, `manifest.webmanifest`, and `sw.js`.
-4. Commit and wait for GitHub Pages deployment.
-5. Test both `https://afunk-hub.github.io/PPApp/` and `https://afunk-hub.github.io/PPApp/?v=2.0.03` in Chrome. Both should display 2.0.03.
-6. Reopen the installed app. The updated worker should now be able to install because every file in its pre-cache list exists.
-
-If an older home-screen installation remains pinned to a different URL/scope, verify its launch URL before removing or reinstalling it. Do not clear Chrome site storage as a first-line fix.

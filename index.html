@@ -15,9 +15,10 @@
 header{padding:24px 18px 18px;background:linear-gradient(180deg,#e8e4d8,#f4f0e7);border-bottom:1px solid var(--line)}
 .brand{max-width:1100px;margin:auto}.brandline{display:flex;align-items:center;gap:16px}.mark{width:86px;height:86px;flex:none;object-fit:contain;border-radius:50%;box-shadow:0 2px 8px #433b2610}.eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:10px;color:var(--sage);font-weight:750}.brand h1{font-family:Georgia,serif;font-weight:500;font-size:clamp(24px,4vw,36px);margin:2px 0}.tagline{margin:2px 0 0;color:var(--muted);font-family:Georgia,serif;font-style:italic}
 main{max-width:1100px;margin:0 auto;padding:16px; padding-bottom:92px}
-nav{display:flex;gap:7px;overflow-x:auto;padding:5px 0 14px;position:sticky;top:0;background:var(--cream);z-index:3}
-nav button{white-space:nowrap;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:99px;padding:10px 14px;font-weight:650}
-nav button.active{background:var(--sage);color:white;border-color:var(--sage)}
+nav{display:grid;grid-template-columns:1fr;gap:9px;padding:8px 0 16px;position:sticky;top:0;background:var(--cream);z-index:3}
+.nav-group{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);min-width:0;max-width:100%;overflow:hidden}.nav-label{flex:0 0 94px;padding:10px 0 0;text-transform:uppercase;letter-spacing:.1em;font-size:10px;color:var(--muted);font-weight:800}.nav-items{display:flex;flex:1 1 0%;width:0;max-width:100%;min-width:0;gap:7px;overflow-x:auto;overflow-y:hidden;padding:1px 0 5px;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin}.nav-items button{flex:0 0 auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:12px;padding:9px 12px;font-weight:650}.nav-items button.active{background:var(--sage);color:white;border-color:var(--sage)}
+.command-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px}.command-card{grid-column:span 3;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:15px}.command-card.wide{grid-column:span 6}.command-card.full{grid-column:span 12}.command-value{font-size:27px;font-weight:800;letter-spacing:-.04em}.command-list{display:grid;gap:8px}.command-item{padding:10px;border:1px solid var(--line);border-radius:12px;background:#fffdf8}.command-item strong{display:block}.command-item small{color:var(--muted)}.status-pill{display:inline-block;border-radius:999px;background:var(--sage2);padding:3px 8px;font-size:11px;font-weight:750;margin-top:5px}
+@media(max-width:650px){.nav-group{display:block;width:100%;min-width:0;max-width:100%;overflow:hidden}.nav-label{display:block;padding:0 0 6px}.nav-items{display:flex;width:100%;max-width:100%;min-width:0;padding-bottom:5px;overflow-x:auto;overflow-y:hidden;touch-action:pan-x}.command-card,.command-card.wide{grid-column:span 12}}
 .panel{display:none}.panel.active{display:block}
 h2{font:500 25px Georgia,serif;margin:8px 0 12px}h3{font-size:15px;margin:0 0 10px}
 .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px}.card{grid-column:span 12;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:0 2px 7px #433b2608}
@@ -31,15 +32,19 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:20px}
 </style>
 <script>
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
-  let ppRefreshing = false;
-  navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (!ppRefreshing) { ppRefreshing = true; location.reload(); }
-  });
   window.addEventListener("load", async () => {
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
     try {
       const registration = await navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" });
-      await registration.update();
-    } catch (error) { /* The app remains usable if service-worker updates are unavailable. */ }
+      registration.update().catch(() => {});
+    } catch (error) {
+      console.warn("Prairie Preludes service worker registration failed:", error);
+    }
   });
 }
 </script>
@@ -51,10 +56,27 @@ if ("serviceWorker" in navigator && location.protocol !== "file:") {
 <div><div class="eyebrow">Creator Studio</div><h1>Prairie Preludes</h1><p class="tagline">A quieter kind of beautiful.</p><p class="sub" style="margin:5px 0 0">Creator Studio · Version <strong>2.0.03</strong></p></div>
 </div></div></header>
 <main>
-<nav id="nav">
-<button class="active" data-tab="overview">Overview & insights</button><button data-tab="planner">Content planner</button><button data-tab="library">Creative library</button><button data-tab="footageusage">Footage Usage</button><button data-tab="monthly">Monthly tracking</button><button data-tab="compare">Cross-platform comparison</button><button data-tab="uploads">Video uploads</button><button data-tab="snapshots">Snapshot metrics</button><button data-tab="music">Music catalog</button><button data-tab="copyright">Copyright & evidence</button><button data-tab="copies">Copying log</button><button data-tab="review">Quarterly review</button><button data-tab="backup">Backup & settings</button>
+<nav id="nav" aria-label="Creator Studio navigation">
+<div class="nav-group"><span class="nav-label">Workspace</span><div class="nav-items"><button class="active" data-tab="command">Command Center</button><button data-tab="planner">Projects & planner</button><button data-tab="library">Creative library</button><button data-tab="footageusage">Footage usage</button></div></div>
+<div class="nav-group"><span class="nav-label">Performance</span><div class="nav-items"><button data-tab="overview">Analytics overview</button><button data-tab="monthly">Monthly tracking</button><button data-tab="compare">Platform comparison</button><button data-tab="uploads">Published uploads</button><button data-tab="snapshots">Snapshot metrics</button></div></div>
+<div class="nav-group"><span class="nav-label">Rights & records</span><div class="nav-items"><button data-tab="music">Music catalog</button><button data-tab="copyright">Copyright & evidence</button><button data-tab="copies">Copying log</button><button data-tab="review">Quarterly review</button><button data-tab="backup">Backup & settings</button></div></div>
 </nav>
-<section id="overview" class="panel active">
+<section id="command" class="panel active">
+<h2>Creator Command Center</h2>
+<p class="sub">Your production at a glance — projects, footage, publishing, and next actions in one place.</p>
+<div class="command-grid">
+<div class="command-card"><div class="sub">Active projects</div><div class="command-value" id="ccActive">0</div><div class="sub">Ideas through ready to publish</div></div>
+<div class="command-card"><div class="sub">Upcoming deadlines</div><div class="command-value" id="ccUpcoming">0</div><div class="sub">Planned dates in the next 14 days</div></div>
+<div class="command-card"><div class="sub">Unused footage</div><div class="command-value" id="ccUnused">0</div><div class="sub">Assets with no linked upload use</div></div>
+<div class="command-card"><div class="sub">Published uploads</div><div class="command-value" id="ccPublished">0</div><div class="sub">Platform entries tracked</div></div>
+<div class="command-card wide"><h3>Production pipeline</h3><div id="ccPipeline" class="command-list"></div></div>
+<div class="command-card wide"><h3>Next up</h3><div id="ccNext" class="command-list"></div></div>
+<div class="command-card full"><h3>Needs attention</h3><div id="ccAttention" class="command-list"></div></div>
+<div class="command-card full"><h3>Quick actions</h3><div class="actions"><button class="primary" onclick="openTab('planner')">Create a content project</button><button class="secondary" onclick="openTab('footageusage')">Review footage usage</button><button class="secondary" onclick="openTab('uploads')">Record a published upload</button><button class="secondary" onclick="openTab('backup')">Back up studio data</button></div></div>
+</div>
+</section>
+
+<section id="overview" class="panel">
 <h2>Studio overview</h2>
 <div class="grid">
 <div class="card span3"><div class="sub">Videos tracked</div><div class="metric" id="ovVideos">0</div></div>
@@ -64,19 +86,22 @@ if ("serviceWorker" in navigator && location.protocol !== "file:") {
 <div class="card span6"><h3>Lifetime views by platform</h3><div id="platformChart"></div></div>
 <div class="card span6"><h3>Lifetime views by genre</h3><div id="genreChart"></div></div>
 <div class="card"><div class="row" style="justify-content:space-between;align-items:center"><h3>Performance insights</h3><div class="field" style="max-width:210px"><label for="insightMetric">Rank videos by</label><select id="insightMetric"><option value="views">Lifetime views</option><option value="engagement">Engagement actions</option><option value="engagementRate">Engagement rate</option><option value="followerRate">Followers per 1,000 views</option><option value="followers">Followers gained</option><option value="watch">Watch minutes</option></select></div></div><div id="insightsTable"></div><p class="sub">Uses the latest lifetime snapshot per platform entry. Rankings are descriptive, not proof that a particular creative choice caused performance.</p></div>
-<div class="card"><h3>Studio workflow</h3><div class="notice">Record a snapshot after publishing, using the same 7-, 30-, and 90-day checkpoints for every platform. Save source files, dated exports, and screenshots as evidence. This app stores records on this device until you export a backup.</div></div>
+<div class="card"><h3>Studio workflow</h3><div class="notice">Record a snapshot after publishing, using the same 7-, 30-, and 90-day checkpoints for every platform. Save source files, dated exports, and screenshots as evidence. This app stores records on this device until you export a backup. Version 2.0.03 retains the complete 2.0.01 project workflow and adds release-specific improvements without replacing existing plans or asset IDs.</div></div>
 </div>
 </section>
 <section id="planner" class="panel">
-<h2>Content planner</h2>
+<h2>Content Projects</h2>
+<p class="sub">The existing Content Planner is now the project workspace. Existing plans remain in place and continue to link to footage, music, and uploads.</p>
 <div class="card"><h3>Plan a video</h3><p class="sub">Move each idea through production. After publishing manually, use the action below to create tracking entries for the selected platforms; the app does not publish to social networks automatically.</p>
 <form id="planForm">
 <div class="row"><div class="field"><label for="pTitle">Working title *</label><input id="pTitle" required placeholder="Fog lifting across the prairie"></div><div class="field"><label for="pDate">Planned publish date</label><input id="pDate" type="date"></div><div class="field"><label for="pStatus">Stage</label><select id="pStatus"><option>Idea</option><option>Planned</option><option>In production</option><option>Ready to publish</option></select></div></div>
 <div class="row"><div class="field"><label for="pGenre">Genre / scene</label><select id="pGenre"><option>Sunrise & sunset</option><option>Prairie landscapes</option><option>Weather & seasons</option><option>Farm life</option><option>Wildlife</option><option>Garden & flowers</option><option>Other</option></select></div><div class="field"><label for="pAspect">Format</label><select id="pAspect"><option>Vertical 9:16</option><option>Horizontal 16:9</option><option>Square 1:1</option><option>Multiple formats</option></select></div><div class="field"><label for="pPlatforms">Target platforms</label><select id="pPlatforms" multiple size="4"><option selected>YouTube</option><option selected>Instagram</option><option selected>Facebook</option><option selected>TikTok</option></select><span class="sub">On mobile, tap to select or deselect platforms.</span></div></div>
 <div class="row"><div class="field"><label for="pMusic">Associated music</label><select id="pMusic"><option value="">No music selected</option></select></div><div class="field"><label for="pAsset">Associated footage</label><select id="pAsset"><option value="">No footage selected</option></select></div></div>
-<div class="field"><label for="pCaption">Caption / description draft</label><textarea id="pCaption" placeholder="Draft caption for the post…"></textarea></div><div class="field"><label for="pHashtags">Hashtags / keywords</label><input id="pHashtags" placeholder="#prairiesunrise #quietmoments"></div><div class="field"><label for="pNotes">Production notes / checklist</label><textarea id="pNotes" placeholder="Shot list, audio cleanup, thumbnail, export checks…"></textarea></div>
-<div class="actions"><button class="primary" type="submit">Save plan</button><button class="secondary" type="button" id="resetPlan">Clear form</button></div></form></div>
-<div class="card"><h3>Planned and in-progress videos</h3><div id="planTable" class="tablewrap"></div></div>
+<div class="field"><label for="pCaption">Caption / description draft</label><textarea id="pCaption" placeholder="Draft caption for the post…"></textarea></div><div class="field"><label for="pHashtags">Hashtags / keywords</label><input id="pHashtags" placeholder="#prairiesunrise #quietmoments"></div><div class="field"><label for="pShotList">Shot list / filming checklist</label><textarea id="pShotList" placeholder="1. Wide establishing shot&#10;2. Detail / close-up&#10;3. Alternate angle or ending shot"></textarea></div>
+<div class="field"><label for="pEditNotes">Editing / delivery notes</label><textarea id="pEditNotes" placeholder="Select best takes, color grade, audio, thumbnail, export checks…"></textarea></div>
+<div class="field"><label for="pNotes">Additional production notes</label><textarea id="pNotes" placeholder="Weather, timing, creative direction, other reminders…"></textarea></div>
+<div class="actions"><button class="primary" type="submit" id="savePlanBtn">Save project</button><button class="secondary" type="button" id="resetPlan">Clear form</button></div></form></div>
+<div class="card"><h3>Projects and content plans</h3><div id="planTable" class="tablewrap"></div></div>
 </section>
 <section id="library" class="panel">
 <h2>Creative library</h2>
@@ -205,7 +230,7 @@ if ("serviceWorker" in navigator && location.protocol !== "file:") {
 <section id="backup" class="panel">
 <h2>Backup & settings</h2>
 <div class="card"><h3>About & version history</h3>
-<div class="row"><div class="field"><label>Current version</label><div class="metric">2.0.03</div></div><div class="field"><label>Release type</label><div>Revision release — service-worker cache update and activation fix</div></div><div class="field"><label>Release status</label><div><span class="pill">Service-worker cache and update handling corrected</span></div></div></div>
+<div class="row"><div class="field"><label>Current version</label><div class="metric">2.0.03</div></div><div class="field"><label>Release type</label><div>Revision release — Recording Speed tracking</div></div><div class="field"><label>Release status</label><div><span class="pill">Complete project workflow + Recording Speed</span></div></div></div>
 <p class="sub">Version format: MAJOR.MINOR.REVISION (X.X.XX). Major releases indicate foundational changes; minor releases add substantial capabilities; revisions contain fixes and small refinements.</p>
 <h3 style="margin-top:16px">Release history</h3>
 <div class="tablewrap"><table><thead><tr><th>Version</th><th>Release note</th><th>Scope</th></tr></thead><tbody>
@@ -213,25 +238,14 @@ if ("serviceWorker" in navigator && location.protocol !== "file:") {
 <tr><td><strong>1.0.03</strong></td><td>Applied Prairie Preludes logo and coordinated app/PWA icons.</td><td>Branding refinement; versioned HTML filename; manifest and service-worker updates.</td></tr>
 <tr><td><strong>1.0.06</strong></td><td>Added video length and video filter fields to footage asset records.</td><td>Fields are saved, editable, and displayed in the footage catalog; older records remain compatible.</td></tr>
 <tr><td><strong>1.0.07</strong></td><td>Added Filming Setup tracking to footage asset records.</td><td>Fixed dropdown choices: Handheld, Flow 2 Pro Gimbal, Tripod, and Gimbal + Tripod. Saved, editable, and shown in the footage catalog; existing records remain compatible.</td></tr>
-<tr><td><strong>1.0.08</strong></td><td>Added Recording Speed tracking to footage asset records.</td><td>Introduced 1/4×, 1/2×, 1×, and Time-lapse choices; saved, editable, and displayed in the footage catalog.</td></tr>
-<tr><td><strong>2.0.01</strong></td><td>Added on-device catalog recovery and backup visibility improvements; refined mobile navigation.</td><td>Secondary local recovery copy, record-count summary for footage, plans, uploads, and music, and swipeable navigation.</td></tr>
-<tr><td><strong>2.0.02</strong></td><td>Added Recording Speed tracking to footage asset records.</td><td>Choices: 1/4×, 1/2×, 1×, and Time-lapse. Saved, editable, displayed in the footage catalog, and included in full JSON backup/restore; existing records default to 1× when edited.</td></tr>
-<tr><td><strong>2.0.03</strong></td><td>Corrected service-worker cache cleanup and update activation.</td><td>Old Prairie Preludes cache names are explicitly retired; fetches are scoped to the current release cache; page navigations prefer the network; service-worker updates are checked without the HTTP cache and the page reloads after controller takeover.</td></tr>
+<tr><td><strong>2.0.01</strong></td><td>Introduced the Creator Command Center and integrated Content Projects workflow.</td><td>Grouped navigation; existing planner retained as Content Projects; project editing, shot lists, editing notes, pipeline dashboard, deadline and project-gap summaries. Existing records remain in the same local data store.</td></tr>
+<tr><td><strong>2.0.02</strong></td><td>Added Recording Speed tracking to footage asset records.</td><td>Choices: 1/4×, 1/2×, 1×, and Time-lapse. Saved, editable, displayed in the footage catalog, and included in full JSON backup/restore; older records default to 1×.</td></tr>
+<tr><td><strong>2.0.03</strong></td><td>Corrected service-worker cache cleanup and update activation.</td><td>Retires only Prairie Preludes cache namespaces; uses the current release cache for offline fallback; prefers network for page navigations; checks service-worker updates without the HTTP cache and reloads after controller takeover.</td></tr>
 </tbody></table></div>
-<p class="sub">Future release convention: increment the revision for small fixes, the minor version for substantial capability releases, and the major version for foundational redesigns. The revision resets to 00 when the minor version increases.</p>
-</div>
-<div class="card"><h3>On-device catalog copy & recovery</h3>
-<p class="sub">A secondary rolling copy of your Creator Studio database is kept in this browser on this device. If the primary saved database is missing or unreadable, the app attempts to restore from this copy. This is an additional local safeguard, not a replacement for exporting JSON backups to another location.</p>
-<div class="row">
-<div class="field"><label>Footage records</label><div class="metric" id="backupFootageCount">0</div></div>
-<div class="field"><label>Content plans / projects</label><div class="metric" id="backupPlanCount">0</div></div>
-<div class="field"><label>Video uploads</label><div class="metric" id="backupUploadCount">0</div></div>
-<div class="field"><label>Original music records</label><div class="metric" id="backupMusicCount">0</div></div>
-</div>
-<p id="recoveryCopyStatus" class="sub">Recovery copy status will appear here.</p>
+<p class="sub">Future release convention: 2.0.02 and 2.0.03 are revision releases; 2.1.00 will mark a substantial capability release, and 3.0.00 a future major redesign. The revision resets to 00 when the minor version increases.</p>
 </div>
 <div class="card"><h3>Local data and backup</h3><p>Records are stored in this browser on this device. Clearing browser data or uninstalling may remove records. Export backups regularly and keep them somewhere safe. The app does not automatically sync between devices.</p>
-<div class="notice" id="backupStatus">Backup status will appear here.</div><div class="actions"><button class="primary" id="exportBtn">Export JSON backup</button><button class="secondary" id="exportCsv">Export metrics CSV</button><label class="secondary" for="importFile">Import backup JSON</label><input id="importFile" type="file" accept=".json,application/json" style="display:none"><button class="secondary danger" id="clearBtn">Clear all local data</button></div><p id="backupMsg" class="sub" role="status"></p><p class="sub">Imports are previewed before you choose to merge or replace. Keep a dated backup outside this browser. The displayed backup date records exports made from this app on this browser only.</p><p class="sub"><strong>Data preservation release requirement:</strong> every stored data category and new field must be included in JSON export and restore. Releases must preserve existing records and pass export, import, merge, and replace checks.</p></div>
+<div class="notice" id="backupStatus">Backup status will appear here.</div><div class="notice" style="margin-top:10px"><strong>Two layers of protection:</strong> Creator Studio keeps an on-device safety copy to help recover if its main catalog entry is damaged or missing. This is not an external backup and can still be lost if site data is cleared or the app storage is removed. Use Export JSON backup and keep the downloaded file outside the app.</div><div class="actions"><button class="primary" id="exportBtn">Export JSON backup</button><button class="secondary" id="exportCsv">Export metrics CSV</button><label class="secondary" for="importFile">Import backup JSON</label><input id="importFile" type="file" accept=".json,application/json" style="display:none"><button class="secondary danger" id="clearBtn">Clear all local data</button></div><p id="backupMsg" class="sub" role="status"></p><p class="sub">Imports are previewed before you choose to merge or replace. Keep a dated backup outside this browser. The displayed backup date records exports made from this app on this browser only.</p></div>
 <div class="card"><h3>Install on Android</h3><ol><li>Host this app on a secure HTTPS site (or use a compatible local web server).</li><li>Open the site in Chrome on Android.</li><li>Use Chrome’s menu and choose <b>Install app</b> or <b>Add to Home screen</b>.</li></ol><p class="sub">The downloaded package includes a manifest and service worker. A service worker and install prompt require an HTTPS origin (localhost is allowed for development); opening the HTML file directly is not enough for full PWA installation.</p></div>
 <div class="card"><h3>Privacy</h3><p>This is a local-first tracker. No analytics or external services are included. Platform metrics must be entered manually; the app does not connect to social media accounts.</p></div>
 </section>
@@ -239,23 +253,19 @@ if ("serviceWorker" in navigator && location.protocol !== "file:") {
 </main>
 <script>
 const KEY='prairie-preludes-creator-studio-v2';
-const RECOVERY_KEY='prairie-preludes-creator-studio-v2-recovery';
+const SAFETY_KEY='prairie-preludes-creator-studio-v2-safety-copy';
 const blank=()=>({uploads:[],snapshots:[],music:[],evidence:{},copies:[],reviews:[],plans:[],assets:[]});
+function readStoredObject(key){
+ try{const raw=localStorage.getItem(key);if(!raw)return null;const value=JSON.parse(raw);return value&&typeof value==='object'&&!Array.isArray(value)?value:null;}catch(e){return null}
+}
 function load(){
- let primary=null;
- try{primary=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){primary=null}
- if(primary&&typeof primary==='object'&&!Array.isArray(primary))return {...blank(),...primary};
- // If the primary database is absent or unreadable, try the rolling local recovery copy.
  try{
-  const envelope=JSON.parse(localStorage.getItem(RECOVERY_KEY)||'null');
-  const recovered=envelope?.data||envelope;
-  if(recovered&&typeof recovered==='object'&&!Array.isArray(recovered)){
-   try{localStorage.setItem(KEY,JSON.stringify(recovered))}catch(e){}
-   return {...blank(),...recovered};
-  }
- }catch(e){}
- // Migrate data from the first version if it exists in this browser.
- try{
+  const primary=readStoredObject(KEY);
+  if(primary)return {...blank(),...primary};
+  // Recover if the primary catalog key is missing or unreadable but the on-device safety copy remains.
+  const safety=readStoredObject(SAFETY_KEY);
+  if(safety){try{localStorage.setItem(KEY,JSON.stringify(safety))}catch(e){};return {...blank(),...safety};}
+  // Migrate data from the first version if it exists in this browser.
   let old=JSON.parse(localStorage.getItem('prairie-preludes-creator-studio-v1')||'null');
   if(old){
    let uploads=[],snapshots=[];
@@ -266,27 +276,27 @@ function load(){
    });
    return {...blank(),uploads,snapshots,music:old.music||[],evidence:old.evidence||{},copies:old.copies||[],reviews:old.reviews||[]};
   }
- }catch(e){}
- return blank();
+  return blank();
+ }catch(e){return blank()}
 }
 let db=load();
-// Backfill the new footage-speed field for older records so every JSON export carries it.
+// Older footage records remain compatible and default to normal recording speed.
 db.assets=db.assets.map(a=>({...a,recordingSpeed:a.recordingSpeed||'1'}));
 function save(){
- const serialized=JSON.stringify(db);
- localStorage.setItem(KEY,serialized);
- // Keep a separate rolling copy; failure here must not block the primary save.
- try{localStorage.setItem(RECOVERY_KEY,JSON.stringify({savedAt:new Date().toISOString(),data:db}))}catch(e){}
+ const payload=JSON.stringify(db);
+ // Keep a second on-device copy to recover from an accidental loss/corruption of the primary key.
+ localStorage.setItem(KEY,payload);
+ try{localStorage.setItem(SAFETY_KEY,payload)}catch(e){console.warn('Prairie Preludes safety copy could not be updated:',e)}
  render();
 }
-try{if(!localStorage.getItem(RECOVERY_KEY))localStorage.setItem(RECOVERY_KEY,JSON.stringify({savedAt:new Date().toISOString(),data:db}))}catch(e){}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function val(id){return document.getElementById(id).value}
 function num(id){return Number(val(id)||0)}
 function today(){return new Date().toISOString().slice(0,10)}
 function fmt(n){return Number(n||0).toLocaleString()}
 function table(headers,rows){if(!rows.length)return '<div class="empty">Nothing recorded yet.</div>';return '<table><thead><tr>'+headers.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table>'}
-document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));}));
+function openTab(tab){document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===tab));window.scrollTo({top:0,behavior:'smooth'});}
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>openTab(b.dataset.tab)));
 ['uDate','sDate','mDate','cDate','pDate','aDate'].forEach(id=>{let el=document.getElementById(id);if(el)el.value=today()});
 document.getElementById('monthSelect').value=today().slice(0,7);
 ['monthSelect','monthPlatform','monthWindow'].forEach(id=>document.getElementById(id).addEventListener('change',renderMonthly));
@@ -318,13 +328,14 @@ function renderChecklist(){let id=val('eWork'),item=db.evidence[id]||{checked:[]
 document.getElementById('evidenceForm').addEventListener('submit',e=>{e.preventDefault();let id=val('eWork');if(!id)return;db.evidence[id]={checked:[...document.querySelectorAll('[data-check]:checked')].map(x=>Number(x.dataset.check)),notes:val('eNotes')};save();alert('Evidence checklist saved.')});
 document.getElementById('copyForm').addEventListener('submit',e=>{e.preventDefault();db.copies.push({id:crypto.randomUUID(),workId:val('cWork'),date:val('cDate'),platform:val('cPlatform'),status:val('cStatus'),url:val('cUrl'),evidence:val('cEvidence'),action:val('cAction')});save();e.target.reset();document.getElementById('cDate').value=today()});
 document.getElementById('reviewForm').addEventListener('submit',e=>{e.preventDefault();db.reviews.push({id:crypto.randomUUID(),quarter:val('rQuarter'),year:val('rYear'),wins:val('rWins'),learn:val('rLearn'),next:val('rNext'),notes:val('rNotes'),saved:today()});save();e.target.reset();document.getElementById('rYear').value=new Date().getFullYear()});
-document.getElementById('planForm').addEventListener('submit',e=>{e.preventDefault();const platforms=[...document.getElementById('pPlatforms').selectedOptions].map(o=>o.value);db.plans.push({id:crypto.randomUUID(),title:val('pTitle'),plannedDate:val('pDate'),status:val('pStatus'),genre:val('pGenre'),aspect:val('pAspect'),platforms,musicId:val('pMusic'),assetId:val('pAsset'),caption:val('pCaption'),hashtags:val('pHashtags'),notes:val('pNotes'),created:today(),videoIds:[]});save();e.target.reset();document.getElementById('pDate').value=today();[...document.getElementById('pPlatforms').options].forEach(o=>o.selected=true)});
-document.getElementById('resetPlan').onclick=()=>{document.getElementById('planForm').reset();document.getElementById('pDate').value=today()};
+let editingPlanId=null;
+document.getElementById('planForm').addEventListener('submit',e=>{e.preventDefault();const platforms=[...document.getElementById('pPlatforms').selectedOptions].map(o=>o.value);const existing=editingPlanId?db.plans.find(p=>p.id===editingPlanId):null;const record={...(existing||{}),id:existing?.id||crypto.randomUUID(),title:val('pTitle'),plannedDate:val('pDate'),status:val('pStatus'),genre:val('pGenre'),aspect:val('pAspect'),platforms,musicId:val('pMusic'),assetId:val('pAsset'),caption:val('pCaption'),hashtags:val('pHashtags'),shotList:val('pShotList'),editingNotes:val('pEditNotes'),notes:val('pNotes'),created:existing?.created||today(),updated:today(),videoIds:existing?.videoIds||[]};if(existing)Object.assign(existing,record);else db.plans.push(record);editingPlanId=null;document.getElementById('savePlanBtn').textContent='Save project';document.getElementById('resetPlan').textContent='Clear form';save();e.target.reset();document.getElementById('pDate').value=today();[...document.getElementById('pPlatforms').options].forEach(o=>o.selected=true)});
+document.getElementById('resetPlan').onclick=()=>{editingPlanId=null;document.getElementById('planForm').reset();document.getElementById('pDate').value=today();document.getElementById('savePlanBtn').textContent='Save project';document.getElementById('resetPlan').textContent='Clear form'};
 let editingAssetId=null;
 function resetAssetForm(){editingAssetId=null;const f=document.getElementById('assetForm');f.reset();document.getElementById('aDate').value=today();document.getElementById('aSpeed').value='1';document.getElementById('assetEditNotice').hidden=true;document.getElementById('assetSaveButton').textContent='Save footage record';document.getElementById('cancelAssetEdit').hidden=true;}
 document.getElementById('assetForm').addEventListener('submit',e=>{e.preventDefault();const fields={title:val('aTitle'),recordedDate:val('aDate'),format:val('aFormat'),location:val('aLocation'),weather:val('aWeather'),camera:val('aCamera'),filmingSetup:val('aFilmingSetup'),recordingSpeed:val('aSpeed')||'1',videoLength:val('aLength'),videoFilter:val('aFilter'),fileLocation:val('aFile'),notes:val('aNotes')};if(editingAssetId){const item=db.assets.find(a=>a.id===editingAssetId);if(!item){alert('That footage record could not be found.');resetAssetForm();return}Object.assign(item,fields,{updated:today()});}else{db.assets.push({id:crypto.randomUUID(),...fields,created:today()});}save();resetAssetForm();});
 document.getElementById('cancelAssetEdit').addEventListener('click',resetAssetForm);
-function editAsset(id){const a=db.assets.find(x=>x.id===id);if(!a)return;editingAssetId=id;[['aTitle','title'],['aDate','recordedDate'],['aFormat','format'],['aLocation','location'],['aWeather','weather'],['aCamera','camera'],['aFilmingSetup','filmingSetup'],['aSpeed','recordingSpeed'],['aLength','videoLength'],['aFilter','videoFilter'],['aFile','fileLocation'],['aNotes','notes']].forEach(([field,key])=>document.getElementById(field).value=(key==='recordingSpeed'?(a[key]||'1'):(a[key]||'')));document.getElementById('assetEditNotice').hidden=false;document.getElementById('assetSaveButton').textContent='Update footage record';document.getElementById('cancelAssetEdit').hidden=false;document.getElementById('assetForm').scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('aTitle').focus();}
+function editAsset(id){const a=db.assets.find(x=>x.id===id);if(!a)return;editingAssetId=id;[['aTitle','title'],['aDate','recordedDate'],['aFormat','format'],['aLocation','location'],['aWeather','weather'],['aCamera','camera'],['aFilmingSetup','filmingSetup'],['aSpeed','recordingSpeed'],['aLength','videoLength'],['aFilter','videoFilter'],['aFile','fileLocation'],['aNotes','notes']].forEach(([field,key])=>document.getElementById(field).value=a[key]||'');document.getElementById('assetEditNotice').hidden=false;document.getElementById('assetSaveButton').textContent='Update footage record';document.getElementById('cancelAssetEdit').hidden=false;document.getElementById('assetForm').scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('aTitle').focus();}
 
 function del(type,id){if(confirm('Delete this record?')){db[type]=db[type].filter(x=>x.id!==id);if(type==='assets'&&editingAssetId===id)resetAssetForm();save()}}
 function renderUploads(){
@@ -362,15 +373,17 @@ function updateLibrarySelects(){
  [...ua.options].forEach(o=>o.selected=oldUA.includes(o.value));
 }
 function renderPlans(){
- const stageOrder={'Idea':0,'Planned':1,'In production':2,'Ready to publish':3,'Published':4};
- document.getElementById('planTable').innerHTML=table(['Plan / stage','Planned date','Platforms / format','Creative links','Caption / notes','Actions'],db.plans.slice().sort((a,b)=>(a.plannedDate||'9999').localeCompare(b.plannedDate||'9999')).map(p=>{
+ const stages=['Idea','Planned','In production','Ready to publish','Entries created','Published'];
+ document.getElementById('planTable').innerHTML=table(['Project / stage','Planned date','Platforms / format','Creative links','Production notes','Actions'],db.plans.slice().sort((a,b)=>(a.plannedDate||'9999').localeCompare(b.plannedDate||'9999')).map(p=>{
   const music=db.music.find(m=>m.id===p.musicId),asset=db.assets.find(a=>a.id===p.assetId);
-  const stages=['Idea','Planned','In production','Ready to publish','Entries created','Published'];
-  const stageControl=`<select aria-label="Update stage" onchange="setPlanStatus('${p.id}',this.value)">${stages.map(st=>`<option ${st===p.status?'selected':''}>${st}</option>`).join('')}</select>`;
+  const stageControl=`<select aria-label="Update project stage" onchange="setPlanStatus('${p.id}',this.value)">${stages.map(st=>`<option ${st===p.status?'selected':''}>${st}</option>`).join('')}</select>`;
   const canPublish=!['Entries created','Published'].includes(p.status)&&p.platforms?.length;
-  return `<tr><td><b>${esc(p.title)}</b><div>${stageControl}</div><div class="sub">${esc(p.genre||'')}</div></td><td>${esc(p.plannedDate||'—')}</td><td>${esc((p.platforms||[]).join(', ')||'No platforms')}<div class="sub">${esc(p.aspect||'')}</div></td><td>${esc(music?.title||'No music linked')}<div class="sub">${esc(asset?.title||'No footage linked')}</div></td><td>${esc(p.caption||'')}<div class="sub">${esc(p.hashtags||'')} ${esc(p.notes||'')}</div></td><td>${canPublish?`<button class="secondary" onclick="publishPlan('${p.id}')">Mark published & create entries</button>`:''} <button class="secondary danger" onclick="del('plans','${p.id}')">Delete</button></td></tr>`;
+  const checklist=[p.shotList,p.editingNotes,p.notes].filter(Boolean).join(' · ');
+  return `<tr><td><b>${esc(p.title)}</b><div>${stageControl}</div><div class="sub">${esc(p.genre||'')}</div></td><td>${esc(p.plannedDate||'—')}</td><td>${esc((p.platforms||[]).join(', ')||'No platforms')}<div class="sub">${esc(p.aspect||'')}</div></td><td>${esc(music?.title||'No music linked')}<div class="sub">${esc(asset?.title||'No footage linked')}</div><div class="sub">${(p.videoIds||[]).length} linked upload(s)</div></td><td>${esc(p.caption||'')}<div class="sub">${esc(p.hashtags||'')} ${esc(checklist)}</div></td><td><button class="secondary" onclick="editPlan('${p.id}')">Edit</button> ${canPublish?`<button class="secondary" onclick="publishPlan('${p.id}')">Create upload records</button>`:''} <button class="secondary danger" onclick="del('plans','${p.id}')">Delete</button></td></tr>`;
  }));
 }
+function editPlan(id){const p=db.plans.find(x=>x.id===id);if(!p)return;editingPlanId=id;const fields={pTitle:p.title,pDate:p.plannedDate,pStatus:p.status,pGenre:p.genre,pAspect:p.aspect,pMusic:p.musicId,pAsset:p.assetId,pCaption:p.caption,pHashtags:p.hashtags,pShotList:p.shotList,pEditNotes:p.editingNotes,pNotes:p.notes};Object.entries(fields).forEach(([k,v])=>{const el=document.getElementById(k);if(el&&v!==undefined)el.value=v||''});[...document.getElementById('pPlatforms').options].forEach(o=>o.selected=(p.platforms||[]).includes(o.value));document.getElementById('savePlanBtn').textContent='Update project';document.getElementById('resetPlan').textContent='Cancel editing';openTab('planner');document.getElementById('pTitle').focus();}
+
 function setPlanStatus(id,status){const p=db.plans.find(x=>x.id===id);if(p){p.status=status;save()}}
 function publishPlan(id){
  const p=db.plans.find(x=>x.id===id);if(!p)return;
@@ -466,8 +479,19 @@ function renderFootageUsage(){
 }
 ['fuSearch','fuFilter','fuSort'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener(id==='fuSearch'?'input':'change',renderFootageUsage)});
 
+function renderCommandCenter(){
+ const active=db.plans.filter(p=>!['Published','Entries created'].includes(p.status));
+ const todayStr=today(),end=new Date();end.setDate(end.getDate()+14);const endStr=end.toISOString().slice(0,10);
+ const upcoming=db.plans.filter(p=>p.plannedDate&&p.plannedDate>=todayStr&&p.plannedDate<=endStr&&!['Published','Entries created'].includes(p.status)).sort((a,b)=>a.plannedDate.localeCompare(b.plannedDate));
+ const used=new Set(db.uploads.flatMap(v=>v.assetIds||[]));db.uploads.forEach(v=>{if(v.assetId)used.add(v.assetId)});db.plans.forEach(p=>{if(p.assetId&&p.videoIds?.length)used.add(p.assetId)});
+ document.getElementById('ccActive').textContent=fmt(active.length);document.getElementById('ccUpcoming').textContent=fmt(upcoming.length);document.getElementById('ccUnused').textContent=fmt(db.assets.filter(a=>!used.has(a.id)).length);document.getElementById('ccPublished').textContent=fmt(db.uploads.length);
+ const stages=['Idea','Planned','In production','Ready to publish','Entries created','Published'];document.getElementById('ccPipeline').innerHTML=stages.map(st=>{const n=db.plans.filter(p=>p.status===st).length;return `<div class="row" style="justify-content:space-between;align-items:center"><span>${esc(st)}</span><strong>${fmt(n)}</strong></div>`}).join('');
+ document.getElementById('ccNext').innerHTML=upcoming.length?upcoming.slice(0,5).map(p=>`<div class="command-item"><strong>${esc(p.title)}</strong><small>${esc(p.plannedDate)} · ${esc(p.status||'Idea')} · ${(p.platforms||[]).length} platform(s)</small><div><button class="secondary" onclick="editPlan('${p.id}')">Open project</button></div></div>`).join(''):'<div class="empty">No planned deadlines in the next 14 days. Add or schedule a project to see it here.</div>';
+ const attention=[];db.plans.filter(p=>!['Published','Entries created'].includes(p.status)).forEach(p=>{if(!(p.assetId||(p.assetIds||[]).length))attention.push({title:p.title,detail:'No footage asset linked',id:p.id});if(!(p.platforms||[]).length)attention.push({title:p.title,detail:'No target platforms selected',id:p.id});if(p.plannedDate&&p.plannedDate<todayStr)attention.push({title:p.title,detail:'Planned date has passed',id:p.id})});
+ document.getElementById('ccAttention').innerHTML=attention.length?attention.slice(0,8).map(a=>`<div class="command-item"><strong>${esc(a.title)}</strong><small>${esc(a.detail)}</small><div><button class="secondary" onclick="editPlan('${a.id}')">Review project</button></div></div>`).join(''):'<div class="notice">No obvious project gaps detected. This check uses the project fields currently recorded in the app.</div>';
+}
 function render(){
- renderCrossPlatform();renderInsights();renderPlans();renderAssets();renderFootageUsage();updateLibrarySelects();renderBackupStatus();
+ renderCommandCenter();renderCrossPlatform();renderInsights();renderPlans();renderAssets();renderFootageUsage();updateLibrarySelects();renderBackupStatus();
  document.getElementById('ovVideos').textContent=new Set(db.uploads.map(v=>v.title+'|'+v.platform)).size;
  document.getElementById('ovViews').textContent=fmt(db.snapshots.filter(s=>s.window==='lifetime').reduce((a,s)=>a+s.views,0));
  document.getElementById('ovMusic').textContent=db.music.length;document.getElementById('ovCopies').textContent=db.copies.length;
@@ -498,15 +522,11 @@ document.getElementById('importFile').onchange=async e=>{
 };
 function renderBackupStatus(){
  const stamp=localStorage.getItem('prairie-preludes-last-backup');
- document.getElementById('backupStatus').textContent=stamp?'Last JSON export recorded on this browser: '+new Date(stamp).toLocaleString()+'. Export another backup after important changes.':'No JSON export has been recorded on this browser yet. Create a backup and store it somewhere outside this device.';
- document.getElementById('backupFootageCount').textContent=fmt(db.assets.length);
- document.getElementById('backupPlanCount').textContent=fmt(db.plans.length);
- document.getElementById('backupUploadCount').textContent=fmt(db.uploads.length);
- document.getElementById('backupMusicCount').textContent=fmt(db.music.length);
- let recovery=null;try{recovery=JSON.parse(localStorage.getItem(RECOVERY_KEY)||'null')}catch(e){}
- document.getElementById('recoveryCopyStatus').textContent=recovery?.savedAt?'Secondary on-device recovery copy last updated: '+new Date(recovery.savedAt).toLocaleString()+'. Keep an external JSON backup as well.':'Secondary recovery copy has not yet been created; it will be created on the next save.';
+ const counts=`Current records — footage: ${(db.assets||[]).length}, projects: ${(db.plans||[]).length}, uploads: ${(db.uploads||[]).length}, music: ${(db.music||[]).length}. `;
+ const external=stamp?'Last JSON export recorded here: '+new Date(stamp).toLocaleString()+'. ':'No JSON export has been recorded on this browser yet. ';
+ document.getElementById('backupStatus').textContent=counts+external+'Download a JSON backup after important changes and keep it in Downloads or another location outside this app.';
 }
-document.getElementById('clearBtn').onclick=()=>{if(confirm('Permanently clear all Creator Studio data from this browser? Export a backup first if needed.')){db=blank();try{localStorage.removeItem(RECOVERY_KEY)}catch(e){}save();document.getElementById('backupMsg').textContent='All local data cleared.'}};
+document.getElementById('clearBtn').onclick=()=>{if(confirm('Permanently clear all Creator Studio data from this browser? Export a backup first if needed.')){db=blank();save();document.getElementById('backupMsg').textContent='All local data cleared.'}};
 render();
 </script>
 </body></html>
