@@ -1,9 +1,11 @@
-Prairie Preludes Creator Studio 2.0.03 — deployment package
+Prairie Preludes Creator Studio 2.0.03 — corrected deployment package
 
-Upload the CONTENTS of this folder (all eight files) into the existing PPApp folder in the GitHub Pages repository. Do not upload this folder as a nested folder.
+This package preserves the complete repository contents and adds the missing PrairiePreludes2.0.03.html file. That file is byte-for-byte identical to index.html and is explicitly listed in sw.js for pre-caching and offline fallback.
 
-The package contains index.html, the versioned HTML archive, manifest.webmanifest, sw.js, both PWA icons, and release notes.
+Deploy the CONTENTS of this PPApp-main folder into the existing PPApp folder in the GitHub Pages repository (not as a nested PPApp-main folder). Replace the existing files when prompted. Keep the existing JSON backup outside the app.
 
-After deployment, test: https://afunk-hub.github.io/PPApp/?v=2.0.03
+After GitHub Pages finishes deploying, test both:
+https://afunk-hub.github.io/PPApp/
+https://afunk-hub.github.io/PPApp/?v=2.0.03
 
-The service-worker fix does not clear app localStorage. Keep your external JSON backup.
+Do not clear Chrome site data or uninstall the app as part of this correction.

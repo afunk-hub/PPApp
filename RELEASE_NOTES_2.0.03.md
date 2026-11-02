@@ -18,7 +18,7 @@
 - Keep the external JSON backup. The service-worker cache is not a data backup.
 
 ## Verification
-- `index.html` and `PrairiePreludes2.0.03.html` are byte-for-byte identical.
+- Added the missing `PrairiePreludes2.0.03.html` release-named copy; it is byte-for-byte identical to `index.html` and satisfies the service worker's pre-cache list.
 - JavaScript syntax checked.
 - Service-worker syntax checked.
 - ZIP integrity checked.
@@ -26,10 +26,10 @@
 
 ## Deployment
 1. Extract this ZIP.
-2. Upload all eight files from the extracted folder into the **same existing `PPApp` folder** in the GitHub Pages repository. Do not upload the folder as a nested `pp_2_0_03_cachefix` directory.
-3. Replace `index.html`, `PrairiePreludes2.0.03.html`, `manifest.webmanifest`, and `sw.js`; retain or replace the two icons.
+2. Upload the CONTENTS of the `PPApp-main` folder into the **same existing `PPApp` folder** in the GitHub Pages repository. Do not create a nested `PPApp-main` folder.
+3. Replace the existing files when prompted, including `index.html`, `PrairiePreludes2.0.03.html`, `manifest.webmanifest`, and `sw.js`.
 4. Commit and wait for GitHub Pages deployment.
-5. Open `https://afunk-hub.github.io/PPApp/?v=2.0.03` in Chrome. It should display 2.0.03.
-6. Reopen the installed app. The updated worker should retire the stale app cache and reload the new shell.
+5. Test both `https://afunk-hub.github.io/PPApp/` and `https://afunk-hub.github.io/PPApp/?v=2.0.03` in Chrome. Both should display 2.0.03.
+6. Reopen the installed app. The updated worker should now be able to install because every file in its pre-cache list exists.
 
 If an older home-screen installation remains pinned to a different URL/scope, verify its launch URL before removing or reinstalling it. Do not clear Chrome site storage as a first-line fix.
