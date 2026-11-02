@@ -2,7 +2,7 @@
   "name": "Prairie Preludes Creator Studio",
   "short_name": "Prairie Studio",
   "description": "Prairie Preludes content planning, video analytics, creative library, and copyright tracking.",
-  "start_url": "./",
+  "start_url": "./?v=2.0.03",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f4f0e7",

@@ -1,18 +1,9 @@
-PRAIRIE PRELUDES CREATOR STUDIO 2.0.02
+Prairie Preludes Creator Studio 2.0.03 — deployment package
 
-PACKAGE CONTENTS
-- index.html (GitHub Pages entry point; identical to the versioned HTML file)
-- PrairiePreludes2.0.02.html (versioned release archive)
-- manifest.webmanifest
-- sw.js
-- icon-192.png
-- icon-512.png
-- RELEASE_NOTES_2.0.02.md
+Upload the CONTENTS of this folder (all eight files) into the existing PPApp folder in the GitHub Pages repository. Do not upload this folder as a nested folder.
 
-GITHUB PAGES DEPLOYMENT
-1. Extract this ZIP.
-2. Upload all files together into the same GitHub Pages app folder, replacing older files with the same names.
-3. Commit the changes and wait for GitHub Pages to finish deploying.
-4. Verify the app displays version 2.0.02.
+The package contains index.html, the versioned HTML archive, manifest.webmanifest, sw.js, both PWA icons, and release notes.
 
-The ZIP does not contain your personal Creator Studio data or original video/audio/photo media. Keep your external JSON backup.
+After deployment, test: https://afunk-hub.github.io/PPApp/?v=2.0.03
+
+The service-worker fix does not clear app localStorage. Keep your external JSON backup.
