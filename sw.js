@@ -1,4 +1,4 @@
-const CACHE_NAME = 'prairie-preludes-creator-studio-2.0.03';
+const CACHE_NAME = 'prairie-preludes-creator-studio-2.0.04';
 const APP_FILES = [
   './',
   './index.html',
@@ -8,7 +8,7 @@ const APP_FILES = [
   './icon-512.png'
 ];
 // Only retire cache namespaces belonging to Prairie Preludes; leave unrelated site caches alone.
-const PRAIRIE_CACHE = /^prairie-preludes-(?:creator-studio-|2\.0\.01$|2\.0\.02$|2\.0\.03$|1\.0\.)/;
+const PRAIRIE_CACHE = /^prairie-preludes-(?:creator-studio-|2\.0\.01$|2\.0\.02$|2\.0\.03$|2\.0\.04$|1\.0\.)/;
 
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
