@@ -404,7 +404,7 @@ function updateLibrarySelects(){
  const options=(items,empty)=>`<option value="">${empty}</option>`+items.map(x=>`<option value="${esc(x.id)}">${esc(x.title)}</option>`).join('');
  const m=document.getElementById('pMusic'),a=document.getElementById('pAsset'),mv=document.getElementById('mVideoId'),ua=document.getElementById('uAssets');
  const oldM=m.value,oldA=a.value,oldV=mv.value,oldUA=[...ua.selectedOptions].map(o=>o.value);
- m.innerHTML=options(db.music,'No music selected');a.innerHTML=options(db.assets,'No footage selected');mv.innerHTML=options(db.uploads,'No video linked');
+ m.innerHTML='<option value="">No music selected</option>'+db.music.map(x=>`<option value="${esc(x.id)}">${esc(x.title)}${String(x.type||'').trim().toLowerCase()==='original composition'?' (C)':''}</option>`).join('');a.innerHTML=options(db.assets,'No footage selected');mv.innerHTML=options(db.uploads,'No video linked');
  ua.innerHTML=db.assets.map(x=>`<option value="${esc(x.id)}">${esc(x.title)}${x.recordedDate?' — '+esc(x.recordedDate):''}</option>`).join('');
  if([...m.options].some(o=>o.value===oldM))m.value=oldM;if([...a.options].some(o=>o.value===oldA))a.value=oldA;if([...mv.options].some(o=>o.value===oldV))mv.value=oldV;
  [...ua.options].forEach(o=>o.selected=oldUA.includes(o.value));

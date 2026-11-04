@@ -11,3 +11,4 @@
 
 ## Deployment
 Replace the existing `index.html` and `sw.js` files in the GitHub Pages site root with the files in this package. Keep all other app files and local app data unchanged. The service-worker cache namespace is updated to 2.0.07.
+- In the Content Plan “Associated music” dropdown, entries whose Work type is “Original composition” now display “(C)” after the title, making compositions easy to distinguish from recordings and other catalog entries. The marker is display-only and does not change saved music records.
