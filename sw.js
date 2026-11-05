@@ -1,4 +1,4 @@
-const CACHE_NAME = 'prairie-preludes-creator-studio-2.2.00';
+const CACHE_NAME = 'prairie-preludes-creator-studio-2.2.01';
 const APP_FILES = [
   './',
   './index.html',
