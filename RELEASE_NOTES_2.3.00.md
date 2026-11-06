@@ -14,6 +14,13 @@ This release candidate adds field session planning, photography organization, de
 - YouTube Long Format upload time is optional; upload-time windows remain required for short-form platform entries.
 - Existing YouTube Long Format upload records without a category are treated as standalone long-form for the category breakdown. Existing snapshot IDs and video/upload IDs are preserved.
 
+### Calendar stage and series indicators in this revision
+- Video circles, photo squares, and weekly recap diamonds now use a vertically split symbol across both the Publishing Calendar and compact Projects & Planner calendar.
+- The left half represents the series color (or the neutral default for projects without a series); the right half represents production stage.
+- Stage colors: Planned / idea retains gold (`#B79B67`); In production uses prairie orange (`#C9783B`); Ready to publish uses the former In production blue (`#8799B4`); Published uses the former Ready to publish green (`#4F906D`).
+- Weekly recap diamonds use the existing smoky violet (`#57475F`) as their left-side series color and their own status for the right-side stage color. Recap status `Assembling` maps to In production.
+- The Publishing Calendar legend now explains the split-color convention and all four stages.
+
 ### Calendar refinements
 - Series release dates use only their selected series fill color in both calendars; series names are shown in the selected-date details below each calendar with an **Open series** action.
 - The project-planner calendar keeps date numbers aligned at the top of each day cell and includes the same selected-date details area as the publishing calendar.
@@ -53,3 +60,8 @@ This release candidate adds field session planning, photography organization, de
 - Matched Project Planner calendar day-block sizing, padding, and layout to the Publishing Calendar.
 - Matched project, photo, and weekly recap indicator sizing and spacing across both calendars.
 - Removed item-count labels from both calendar day blocks; the content-type indicators remain as the visual cues.
+
+### Update 3 — Video plan form layout
+- Aligned Genre / scene horizontally with Finished video runtime.
+- Moved Target platforms into its own full-width row immediately below runtime/genre and before Format.
+- Kept platform selections and saved project fields unchanged; this is a layout-only update.
