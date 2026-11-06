@@ -65,3 +65,7 @@ This release candidate adds field session planning, photography organization, de
 - Aligned Genre / scene horizontally with Finished video runtime.
 - Moved Target platforms into its own full-width row immediately below runtime/genre and before Format.
 - Kept platform selections and saved project fields unchanged; this is a layout-only update.
+
+
+### Calendar marker correction (2.3.00-5)
+- Corrected the weekly recap calendar marker so its diamond clip-path is not rotated a second time into a square. The split series/stage coloring is preserved in both calendar views.
