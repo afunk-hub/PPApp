@@ -69,3 +69,10 @@ This release candidate adds field session planning, photography organization, de
 
 ### Calendar marker correction (2.3.00-5)
 - Corrected the weekly recap calendar marker so its diamond clip-path is not rotated a second time into a square. The split series/stage coloring is preserved in both calendar views.
+
+### 2.3.00-6 — Two-week preparedness and future-date publishing guard
+- Added a compact two-week preparedness bar directly below the Publishing Calendar. The displayed result is a percentage only; the underlying daily weighting is not exposed.
+- Preparedness uses a rolling 14-day window and a maximum of two points per day. Empty dates contribute zero; dates with planned/in-progress content contribute one; Ready to Publish contributes two. If multiple projects or recaps share a date, the lowest readiness stage determines that date's contribution. Published items are excluded.
+- Added threshold colors: red below 50%, orange from 50% to below 75%, yellow from 75% to below 90%, and green from 90% through 100%.
+- Added validation to prevent video projects, photo projects, weekly recaps, and upload records from being marked/recorded as published with a future publication date.
+- Preserved the prior 2.3.00 candidate features and existing saved data structures.
