@@ -1,24 +1,13 @@
 {
   "name": "Prairie Preludes Creator Studio",
   "short_name": "Prairie Studio",
-  "description": "Prairie Preludes Creator Studio 2.0.03 \u2014 content planning, video analytics, creative library, and copyright tracking.",
-  "start_url": "./?v=2.0.03",
-  "scope": "./",
+  "description": "Prairie Preludes creative production, field planning, weekly recaps, and publishing studio.",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#f4f0e7",
   "theme_color": "#e9e4d8",
   "icons": [
-    {
-      "src": "./icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "./icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    }
+    {"src":"./icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"./icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
   ]
 }
