@@ -791,7 +791,7 @@ function calendarMarkup(compact=false){
  const classes=['calendar-day',outside?'outside':'',date===localDateString(new Date())?'today':'',date===calendarSelectedDate?'selected':'',activeRel?'series-day':'',overdue?'overdue':''].filter(Boolean).join(' ');
  const dots=items.slice(0,compact?3:8).map(p=>{if(p.contentType==='photo')return `<span class="calendar-dot photo-dot" title="${esc(p.title||'Photo project')}"></span>`;const ser=db.series.find(x=>x.id===p.seriesId),color=ser?(ser.color||'#71866A'):'#A49B8D';return `<span class="calendar-dot series-dot ${calendarStatusClass(p.status)}" style="--dot-color:${esc(color)};background:${esc(color)}" title="${esc(p.title||'Planned video')} · ${esc(ser?.name||'No series')}"></span>`}).join('');
  const recaps=db.weeklyRecaps.filter(r=>r.publishDate===date),sessions=db.fieldSessions.filter(x=>x.date===date);const sessionDots=sessions.map(x=>`<span class="calendar-dot session-dot" title="${esc('Field session: '+x.name)}"></span>`).join('');const recapDots=recaps.map(r=>`<span class="calendar-dot recap-dot" title="${esc('Weekly recap: '+(r.fullTitle||r.subtitle))}"></span>`).join('');const itemCount=items.length+recaps.length+sessions.length;
- out+=`<button type="button" class="${classes}" style="${style}" onclick="selectCalendarDate('${date}',${compact?'true':'false'})"><span class="day-number">${d.getDate()}</span>${itemCount?`<span class="calendar-dots">${dots}${recapDots}${sessionDots}</span><span class="day-count">${itemCount} item${itemCount===1?'':'s'}</span>`:''}</button>`;
+ out+=`<button type="button" class="${classes}" style="${style}" onclick="selectCalendarDate('${date}',${compact?'true':'false'})"><span class="day-number">${d.getDate()}</span>${itemCount?`<span class="calendar-dots">${dots}${recapDots}${sessionDots}</span>`:''}</button>`;
  }return out+'</div>';
 }
 function renderCalendarDetail(){
@@ -807,7 +807,7 @@ function renderPublishingCalendar(){
  const monthRecaps=db.weeklyRecaps.filter(r=>r.publishDate&&r.publishDate.slice(0,7)===`${y}-${String(m+1).padStart(2,'0')}`),monthSessions=db.fieldSessions.filter(x=>x.date&&x.date.slice(0,7)===`${y}-${String(m+1).padStart(2,'0')}`);const covered=new Set([...monthPlans.map(p=>p.plannedDate),...monthRecaps.map(r=>r.publishDate),...monthSessions.map(x=>x.date)]).size;
  const totalDays=new Date(y,m+1,0).getDate();
  const planner=document.getElementById('plannerCalendar');
- if(planner)planner.innerHTML=`<div class="calendar-toolbar"><button class="secondary" onclick="changeCalendarMonth(-1)">‹</button><strong>${calendarMonth.toLocaleDateString(undefined,{month:'long',year:'numeric'})}</strong><button class="secondary" onclick="changeCalendarMonth(1)">›</button></div>${calendarMarkup(true)}`;
+ if(planner)planner.innerHTML=`<div class="calendar-toolbar"><button class="secondary" onclick="changeCalendarMonth(-1)">‹</button><strong>${calendarMonth.toLocaleDateString(undefined,{month:'long',year:'numeric'})}</strong><button class="secondary" onclick="changeCalendarMonth(1)">›</button></div>${calendarMarkup(false)}`;
  const full=document.getElementById('fullCalendar');
  if(full)full.innerHTML=calendarMarkup(false);
  const title=document.getElementById('calendarMonthTitle');if(title)title.textContent=calendarMonth.toLocaleDateString(undefined,{month:'long',year:'numeric'});

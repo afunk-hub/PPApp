@@ -49,4 +49,7 @@ This release candidate adds field session planning, photography organization, de
 - JavaScript syntax, static HTML structure, ID uniqueness, YouTube analytics calculation/filter checks, backup-normalizer compatibility, manifest parsing, and ZIP integrity are performed for this candidate.
 - Full interactive Android/PWA validation remains part of user acceptance testing.
 
-Deployment Retry - 20261106
+## Update 2 — Calendar consistency and cleaner day blocks
+- Matched Project Planner calendar day-block sizing, padding, and layout to the Publishing Calendar.
+- Matched project, photo, and weekly recap indicator sizing and spacing across both calendars.
+- Removed item-count labels from both calendar day blocks; the content-type indicators remain as the visual cues.
