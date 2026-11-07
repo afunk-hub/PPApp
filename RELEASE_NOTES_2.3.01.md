@@ -25,3 +25,8 @@ This revision reorganizes navigation and backup controls while preserving the va
 ### Validation
 - Static HTML structure, unique IDs, navigation target coverage, JavaScript syntax, manifest JSON, and ZIP integrity are checked for this package.
 - Full interactive Android/PWA acceptance testing remains recommended after installation.
+
+### Build 2.3.01-2 — Navigation row alignment
+- Placed Command Center on its own full-width navigation row.
+- Aligned Workspace, Performance, and Rights & Records dropdowns together on the row immediately below.
+- Adjusted dropdown sizing and labels for narrow mobile screens; destinations and behavior are unchanged.
