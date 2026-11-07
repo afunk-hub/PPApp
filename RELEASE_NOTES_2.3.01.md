@@ -60,3 +60,10 @@ This revision reorganizes navigation and backup controls while preserving the va
 - Imported music records without an internal ID receive one automatically. Existing internal IDs are retained, and collisions introduced by merging are resolved without changing existing local IDs.
 - Photo Catalog and Video Catalog ID behavior is unchanged. Backup structure remains backward compatible, with the new `internalId` property included in JSON backups.
 - Updated the service-worker cache identifier to deliver this build to installed PWA clients.
+
+
+### Build 2.3.01-7 — Simplified Music Catalog entry form
+- Removed the automatically assigned Internal ID display from the Add a composition / recording form so users no longer see an unnecessary ID section while creating or editing a work.
+- Automatic Music Catalog ID generation and storage remain active; IDs continue to appear in the saved catalog and remain available to backup/import logic.
+- Kept the optional external Registration number field. Existing internal IDs, registration numbers, music records, and Photo/Video Catalog ID behavior are unchanged.
+- Updated visible app version, export filenames/metadata, and service-worker cache identifier to 2.3.01-7.
