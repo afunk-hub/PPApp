@@ -50,3 +50,13 @@ This revision reorganizes navigation and backup controls while preserving the va
 - The Command Center button also leaves all section dropdowns closed.
 - Preserved all navigation destinations, panel activation, data records, and existing workflows.
 - Updated the service-worker cache identifier so installed clients receive this behavior update.
+
+
+### Build 2.3.01-6 — Automatic Music Catalog internal IDs
+- New Music Catalog records now receive a unique, automatically generated `MUS-XXXXXXXX` internal ID when saved.
+- The generated internal ID is displayed read-only in the form and catalog; manual entry is no longer required.
+- The previous `Internal ID / registration no.` field is retained as an optional **Registration number** field so existing user-entered values are not lost or overwritten.
+- Existing music records receive an internal ID on first launch; their prior registration values and all other fields remain unchanged.
+- Imported music records without an internal ID receive one automatically. Existing internal IDs are retained, and collisions introduced by merging are resolved without changing existing local IDs.
+- Photo Catalog and Video Catalog ID behavior is unchanged. Backup structure remains backward compatible, with the new `internalId` property included in JSON backups.
+- Updated the service-worker cache identifier to deliver this build to installed PWA clients.
