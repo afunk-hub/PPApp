@@ -30,3 +30,9 @@ This revision reorganizes navigation and backup controls while preserving the va
 - Placed Command Center on its own full-width navigation row.
 - Aligned Workspace, Performance, and Rights & Records dropdowns together on the row immediately below.
 - Adjusted dropdown sizing and labels for narrow mobile screens; destinations and behavior are unchanged.
+
+### Build 2.3.01-3 — Dropdown panel alignment
+- Corrected Performance and Rights & Records dropdown panels so they open within the same full-width navigation area as Workspace.
+- All three dropdown panels now use the navigation container's full available width and wrap their destination buttons within the app boundaries on mobile and desktop.
+- Updated the service-worker cache identifier to ensure installed clients receive the corrected layout.
+- No destination, data, storage, or import/export behavior changed.
