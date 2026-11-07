@@ -43,3 +43,10 @@ This revision reorganizes navigation and backup controls while preserving the va
 - Displays the four live metrics in a single horizontal row on wider screens and a compact 2×2 grid on mobile, reducing vertical scrolling without removing any metric.
 - Preserved the existing metric element IDs and their data calculations; no storage, record, or workflow changes.
 - Updated the service-worker cache identifier for this build.
+
+
+### Build 2.3.01-5 — Auto-close navigation dropdowns
+- Selecting any destination from Workspace, Performance, or Rights & Records now closes the open dropdown after navigating to the selected section.
+- The Command Center button also leaves all section dropdowns closed.
+- Preserved all navigation destinations, panel activation, data records, and existing workflows.
+- Updated the service-worker cache identifier so installed clients receive this behavior update.

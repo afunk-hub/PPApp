@@ -484,7 +484,7 @@ function num(id){return Number(val(id)||0)}
 function today(){return new Date().toISOString().slice(0,10)}
 function fmt(n){return Number(n||0).toLocaleString()}
 function table(headers,rows){if(!rows.length)return '<div class="empty">Nothing recorded yet.</div>';return '<table><thead><tr>'+headers.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table>'}
-function openTab(tab){document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));document.querySelectorAll('.nav-dropdown').forEach(d=>{d.open=!!d.querySelector('button[data-tab=\"'+tab+'\"]');});document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===tab));window.scrollTo({top:0,behavior:'smooth'});}
+function openTab(tab){document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));document.querySelectorAll('.nav-dropdown').forEach(d=>{d.open=false;});document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===tab));window.scrollTo({top:0,behavior:'smooth'});}
 document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>openTab(b.dataset.tab)));
 ['uDate','sDate','mDate','cDate','pDate','aDate'].forEach(id=>{let el=document.getElementById(id);if(el)el.value=today()});
 document.getElementById('monthSelect').value=today().slice(0,7);
