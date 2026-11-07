@@ -36,3 +36,10 @@ This revision reorganizes navigation and backup controls while preserving the va
 - All three dropdown panels now use the navigation container's full available width and wrap their destination buttons within the app boundaries on mobile and desktop.
 - Updated the service-worker cache identifier to ensure installed clients receive the corrected layout.
 - No destination, data, storage, or import/export behavior changed.
+
+
+### Build 2.3.01-4 — Compact Command Center overview
+- Consolidated Active projects, Upcoming deadlines, Unused footage, and Published uploads into one “Studio at a glance” card.
+- Displays the four live metrics in a single horizontal row on wider screens and a compact 2×2 grid on mobile, reducing vertical scrolling without removing any metric.
+- Preserved the existing metric element IDs and their data calculations; no storage, record, or workflow changes.
+- Updated the service-worker cache identifier for this build.
