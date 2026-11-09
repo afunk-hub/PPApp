@@ -226,7 +226,7 @@ if ("serviceWorker" in navigator && location.protocol !== "file:") {
 <h2>Content Projects</h2>
 <div class="card"><div class="calendar-toolbar"><h3>Planned dates at a glance</h3><button class="secondary" onclick="openTab(&quot;calendar&quot;)">Full calendar</button></div><div id="plannerCalendar" class="calendar-compact"></div><div id="plannerCalendarDetail" class="calendar-detail"></div><p class="sub" style="margin-top:9px">Dates with planned projects, series releases, weekly recaps, or field sessions are marked. Select a date to see its scheduled items.</p></div>
 <p class="sub">The existing Content Planner is now the project workspace. Existing plans remain in place and continue to link to footage, music, and uploads.</p>
-<div class="card"><div class="field"><label for="plannerContentType">Choose content type</label><select id="plannerContentType"><option value="video" selected>Video</option><option value="photo">Photo</option></select></div><div class="field"><label for="planChooser">Choose a content plan</label><select id="planChooser"><option value="">Choose a plan…</option><option value="__new__">＋ Create a new plan</option><optgroup label="Existing plans" id="existingPlanOptions"></optgroup></select></div></div>
+<div class="card"><div class="field"><label for="plannerContentType">Choose content type</label><select id="plannerContentType"><option value="video" selected>Video</option><option value="photo">Photo</option></select></div><div class="field"><label for="planChooser">Choose a content plan</label><select id="planChooser"><option value="">Choose a plan…</option><option value="__new__">＋ Create a new plan</option><optgroup label="Unpublished projects (A–Z)" id="unpublishedPlanOptions"></optgroup><optgroup label="Published projects (A–Z)" id="publishedPlanOptions"></optgroup></select></div></div>
 <div id="plannerVideoEditor"><div class="card"><h3>Plan a video</h3><p class="sub">Move each idea through production. After publishing manually, use the action below to create tracking entries for the selected platforms; the app does not publish to social networks automatically.</p>
 <form id="planForm">
 <div class="row"><div class="field"><label for="pTitle">Working title *</label><input id="pTitle" placeholder="Fog lifting across the prairie" required=""/></div><div class="field"><label for="pDate">Planned publish date</label><input id="pDate" type="date"/></div><div class="field"><label for="pStatus">Stage</label><select id="pStatus"><option>Idea</option><option>Planned</option><option>In production</option><option>Ready to publish</option></select></div></div>
@@ -634,9 +634,14 @@ function updateLibrarySelects(){
 }
 function renderPlanChooser(){
  const chooser=document.getElementById('planChooser');if(!chooser)return;
- const type=val('plannerContentType')||'video',prior=chooser.value,group=document.getElementById('existingPlanOptions');
- const items=db.plans.filter(p=>type==='photo'?p.contentType==='photo':p.contentType!=='photo').slice().sort((a,b)=>String(a.title||'').localeCompare(String(b.title||'')));
- group.innerHTML=items.map(p=>`<option value="${esc(p.id)}">${esc(p.title||'Untitled plan')}</option>`).join('');
+ const type=val('plannerContentType')||'video',prior=chooser.value;
+ const unpublishedGroup=document.getElementById('unpublishedPlanOptions'),publishedGroup=document.getElementById('publishedPlanOptions');
+ const items=db.plans.filter(p=>type==='photo'?p.contentType==='photo':p.contentType!=='photo').slice();
+ const isPublished=p=>p.status==='Published'||p.status==='Entries created';
+ const byTitle=(a,b)=>String(a.title||'Untitled plan').localeCompare(String(b.title||'Untitled plan'),undefined,{sensitivity:'base',numeric:true});
+ const unpublished=items.filter(p=>!isPublished(p)).sort(byTitle),published=items.filter(isPublished).sort(byTitle);
+ unpublishedGroup.innerHTML=unpublished.map(p=>`<option value="${esc(p.id)}">${esc(p.title||'Untitled plan')}</option>`).join('');
+ publishedGroup.innerHTML=published.map(p=>`<option value="${esc(p.id)}">(P) ${esc(p.title||'Untitled plan')}</option>`).join('');
  chooser.value=(prior==='__new__'||items.some(p=>p.id===prior))?prior:'';
  document.getElementById('plannerVideoEditor').hidden=type!=='video';document.getElementById('plannerVideoTable').hidden=type!=='video';
  document.getElementById('plannerPhotoEditor').hidden=type!=='photo';document.getElementById('plannerPhotoTable').hidden=type!=='photo';
