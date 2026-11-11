@@ -27,3 +27,9 @@
 - New snapshots store average watch time in a dedicated `avgWatchSeconds` field.
 - Existing historical `watch` values are preserved and displayed as legacy watch minutes; they are not silently converted because they represent a different metric.
 - Snapshot tables, upload-time analytics, comparison metrics, insights, and CSV exports distinguish the new seconds-based average from legacy watch-minute data.
+
+## Follow-up correction (personal build -6)
+- Added an Edit action to each saved snapshot record.
+- Editing updates the existing snapshot in place, preserving its upload/platform association, checkpoint, and record ID; it does not create a duplicate or clear another platform's checkpoint.
+- The snapshot date and metric values can be corrected. Upload/platform and checkpoint selectors are locked while editing to protect the original association.
+- Legacy watch-minute values remain intact when editing older snapshots that do not have an average-watch-seconds value.
