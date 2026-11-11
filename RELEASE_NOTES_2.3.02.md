@@ -21,3 +21,9 @@
 - Reordered the Snapshots Due Today dashboard columns to: Add Snapshot, Video title, Platform, Checkpoint, Published date.
 - Removed the due-date column; overdue checkpoints remain highlighted in red and marked OVERDUE.
 - Constrained the snapshot table to the dashboard width, with horizontal scrolling on narrower screens.
+
+## Follow-up correction (personal build -5)
+- Replaced the snapshot entry's Watch time (minutes) input with Average watch time (seconds).
+- New snapshots store average watch time in a dedicated `avgWatchSeconds` field.
+- Existing historical `watch` values are preserved and displayed as legacy watch minutes; they are not silently converted because they represent a different metric.
+- Snapshot tables, upload-time analytics, comparison metrics, insights, and CSV exports distinguish the new seconds-based average from legacy watch-minute data.
