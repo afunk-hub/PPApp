@@ -1,25 +1,6 @@
-
-if ("serviceWorker" in navigator && location.protocol !== "file:") {
-  window.addEventListener("load", async () => {
-    let refreshing = false;
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (refreshing) return;
-      refreshing = true;
-      window.location.reload();
-    });
-    try {
-      const registration = await navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" });
-      registration.update().catch(() => {});
-    } catch (error) {
-      console.warn("Prairie Preludes service worker registration failed:", error);
-    }
-  });
-}
-
-
 const KEY='prairie-preludes-creator-studio-v2';
 const SAFETY_KEY='prairie-preludes-creator-studio-v2-safety-copy';
-const blank=()=>({uploads:[],snapshots:[],music:[],evidence:{},copies:[],reviews:[],plans:[],assets:[],series:[],photos:[],photoUsage:[],fieldSessions:[],weeklyRecaps:[],recapTitles:[],brandDefaults:{brandName:'Prairie Preludes',tagline:'A quieter kind of beautiful.',musicCredit:'Original violin music by Prairie Preludes',copyright:'© Prairie Preludes. All rights reserved.',hashtags:'#PrairiePreludes #AQuieterKindOfBeautiful #PeacefulMoments #OriginalViolinMusic'}});
+const blank=()=>({uploads:[],snapshots:[],music:[],evidence:{},copies:[],reviews:[],plans:[],assets:[],series:[],photos:[],photoUsage:[],fieldSessions:[],weeklyRecaps:[],recapTitles:[],brandDefaults:{brandName:'Prairie Preludes',tagline:'A quieter kind of beautiful.',musicCredit:'Original violin music by Prairie Preludes',copyright:'© Prairie Preludes. All rights reserved.',hashtags:'#PrairiePreludes #AQuieterKindOfBeautiful #PeacefulMoments #OriginalViolinMusic',tiktokHashtags:''}});
 function readStoredObject(key){
  try{const raw=localStorage.getItem(key);if(!raw)return null;const value=JSON.parse(raw);return value&&typeof value==='object'&&!Array.isArray(value)?value:null;}catch(e){return null}
 }
@@ -54,7 +35,7 @@ const musicIdsMigrated=musicIdsBefore!==JSON.stringify(db.music.map(record=>Stri
 // Older footage records remain compatible and default to normal recording speed.
 db.assets=db.assets.map(a=>({...a,recordingSpeed:a.recordingSpeed||'1'}));
 db.fieldSessions=Array.isArray(db.fieldSessions)?db.fieldSessions:[];db.weeklyRecaps=Array.isArray(db.weeklyRecaps)?db.weeklyRecaps:[];db.recapTitles=Array.isArray(db.recapTitles)?db.recapTitles:[];db.series=Array.isArray(db.series)?db.series.map(x=>({...x,status:x.status||'active',releases:Array.isArray(x.releases)?x.releases:[]})):[];db.plans=Array.isArray(db.plans)?db.plans.map(p=>({...p,seriesId:p.seriesId||''})):[];
-db.brandDefaults={brandName:'Prairie Preludes',tagline:'A quieter kind of beautiful.',musicCredit:'Original violin music by Prairie Preludes',copyright:'© Prairie Preludes. All rights reserved.',hashtags:'#PrairiePreludes #AQuieterKindOfBeautiful #PeacefulMoments #OriginalViolinMusic',...(db.brandDefaults||{})};
+db.brandDefaults={brandName:'Prairie Preludes',tagline:'A quieter kind of beautiful.',musicCredit:'Original violin music by Prairie Preludes',copyright:'© Prairie Preludes. All rights reserved.',hashtags:'#PrairiePreludes #AQuieterKindOfBeautiful #PeacefulMoments #OriginalViolinMusic',tiktokHashtags:'',...(db.brandDefaults||{})};
 const PREPUBLISH_ITEMS=[
  'Confirm final video edit and framing',
  'Check audio levels and violin recording',
@@ -75,7 +56,16 @@ function save(){
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function val(id){return document.getElementById(id).value}
 function num(id){return Number(val(id)||0)}
-function today(){return new Date().toISOString().slice(0,10)}
+const SNAPSHOT_METRICS=['views','likes','comments','shares','saves','avgWatchSeconds','avgPercentViewed','completionRate','followers'];
+function snapshotMetric(s,key){if(!s)return null;const na=Array.isArray(s.naMetrics)&&s.naMetrics.includes(key);if(na||s[key]===null||s[key]===undefined||s[key]==='')return null;const n=Number(s[key]);return Number.isFinite(n)?n:null;}
+function metricSum(rows,key){const values=rows.map(s=>snapshotMetric(s,key)).filter(v=>v!==null);return values.length?values.reduce((a,b)=>a+b,0):null}
+function engagementSum(rows){const values=rows.map(engagementValue).filter(v=>v!==null);return values.length?values.reduce((a,b)=>a+b,0):null}
+function engagementAverage(rows){const values=rows.map(engagementValue).filter(v=>v!==null);return values.length?values.reduce((a,b)=>a+b,0)/values.length:null}
+function metricAverage(rows,key){const values=rows.map(s=>snapshotMetric(s,key)).filter(v=>v!==null);return values.length?values.reduce((a,b)=>a+b,0)/values.length:null}
+function engagementValue(s){const vals=['likes','comments','shares','saves'].map(k=>snapshotMetric(s,k));return vals.some(v=>v===null)?null:vals.reduce((a,b)=>a+b,0)}
+function analyticsNumber(v,key){if(v===null||v===undefined)return 'N/A';return key&&['avgPercentViewed','completionRate'].includes(key)?Number(v).toFixed(1)+'%':key==='avgWatchSeconds'?Number(v).toFixed(1)+' sec':fmt(v)}
+function denverDateString(d=new Date()){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Denver',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d);const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));return `${p.year}-${p.month}-${p.day}`;}
+function today(){return denverDateString()}
 function fmt(n){return Number(n||0).toLocaleString()}
 function table(headers,rows){if(!rows.length)return '<div class="empty">Nothing recorded yet.</div>';return '<table><thead><tr>'+headers.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table>'}
 function openTab(tab){document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));document.querySelectorAll('.nav-dropdown').forEach(d=>{d.open=false;});document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===tab));window.scrollTo({top:0,behavior:'smooth'});}
@@ -84,7 +74,9 @@ document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()
 document.getElementById('monthSelect').value=today().slice(0,7);
 ['monthSelect','monthPlatform','monthWindow'].forEach(id=>document.getElementById(id).addEventListener('change',renderMonthly));
 ['compareWindow','compareMetric'].forEach(id=>document.getElementById(id).addEventListener('change',renderCrossPlatform));
-document.getElementById('insightMetric').addEventListener('change',renderInsights);
+document.getElementById('insightMetric')?.addEventListener('change',renderInsights);
+document.getElementById('analyticsDetailVideo')?.addEventListener('change',renderAnalyticsVideoDetail);
+['analyticsCompareWindow','analyticsFilterPlatform','analyticsFilterGenre','analyticsFilterVideo','analyticsTrendWindow','analyticsTrendPlatform','analyticsPlatformMetric','analyticsRetentionMetric','analyticsGenreMetric','analyticsTreatmentMetric','analyticsVideoMetric','analyticsVideoPlatform'].forEach(id=>document.getElementById(id)?.addEventListener('change',renderAnalytics));
 ['ytLongCategory','ytLongWindow'].forEach(id=>document.getElementById(id).addEventListener('change',renderYoutubeLongAnalytics));
 document.getElementById('rYear').value=new Date().getFullYear();
 const platforms=['YouTube Shorts','YouTube Long Format','Instagram','Facebook','TikTok'];
@@ -120,12 +112,21 @@ document.getElementById('uploadForm').addEventListener('submit',e=>{
 document.getElementById('resetUpload').onclick=resetUploadForm;
 document.getElementById('snapshotFilter').onchange=renderSnapshots;
 ['timeAnalyticsWindow','timeAnalyticsPlatform'].forEach(id=>document.getElementById(id).addEventListener('change',renderTimeAnalytics));
+let editingSnapshotId=null;
+function setSnapshotNaState(id,checked){const input=document.getElementById(id);if(input)input.disabled=checked;}
+function syncSnapshotNa(){SNAPSHOT_METRICS.forEach(key=>{const id={avgWatchSeconds:'sAvgWatch',avgPercentViewed:'sAvgPercentViewed',completionRate:'sCompletionRate',followers:'sFollowers'}[key]||'s'+key[0].toUpperCase()+key.slice(1);const na=document.getElementById(id+'Na');if(na)setSnapshotNaState(id,na.checked);});}
+SNAPSHOT_METRICS.forEach(key=>{const id={avgWatchSeconds:'sAvgWatch',avgPercentViewed:'sAvgPercentViewed',completionRate:'sCompletionRate',followers:'sFollowers'}[key]||'s'+key[0].toUpperCase()+key.slice(1);const na=document.getElementById(id+'Na');if(na)na.addEventListener('change',()=>setSnapshotNaState(id,na.checked));});
+function resetSnapshotForm(){editingSnapshotId=null;document.getElementById('snapshotForm').reset();document.getElementById('sDate').value=today();document.getElementById('sVideo').disabled=false;document.getElementById('sWindow').disabled=false;document.getElementById('saveSnapshotButton').textContent='Save snapshot';document.getElementById('cancelSnapshotEdit').hidden=true;SNAPSHOT_METRICS.forEach(key=>{const id={avgWatchSeconds:'sAvgWatch',avgPercentViewed:'sAvgPercentViewed',completionRate:'sCompletionRate',followers:'sFollowers'}[key]||'s'+key[0].toUpperCase()+key.slice(1);document.getElementById(id).value=0;document.getElementById(id).disabled=false;});syncSnapshotNa();document.getElementById('sCreativeTreatment').value='';}
 document.getElementById('snapshotForm').addEventListener('submit',e=>{
- e.preventDefault();let video=db.uploads.find(v=>v.id===val('sVideo'));if(!video){alert('Please add a video entry first.');return}
- db.snapshots.push({id:crypto.randomUUID(),videoId:video.id,window:val('sWindow'),snapshotDate:val('sDate')||today(),views:num('sViews'),likes:num('sLikes'),comments:num('sComments'),shares:num('sShares'),watch:num('sWatch'),followers:num('sFollowers')});
- save();['sViews','sLikes','sComments','sShares','sWatch','sFollowers'].forEach(id=>document.getElementById(id).value=0);document.getElementById('sDate').value=today();
+ e.preventDefault();const existing=editingSnapshotId?db.snapshots.find(x=>x.id===editingSnapshotId):null;const uploadId=existing?existing.videoId:val('sVideo');const video=db.uploads.find(v=>v.id===uploadId);if(!video){alert('Please add a video entry first.');return}
+ const naMetrics=[];const metrics={snapshotDate:val('sDate')||today(),creativeTreatment:val('sCreativeTreatment')||''};
+ SNAPSHOT_METRICS.forEach(key=>{const id={avgWatchSeconds:'sAvgWatch',avgPercentViewed:'sAvgPercentViewed',completionRate:'sCompletionRate',followers:'sFollowers'}[key]||'s'+key[0].toUpperCase()+key.slice(1);const isNa=document.getElementById(id+'Na').checked;if(isNa){naMetrics.push(key);metrics[key]=null;}else metrics[key]=num(id);});metrics.naMetrics=naMetrics;
+ if(existing)Object.assign(existing,metrics);else db.snapshots.push({id:crypto.randomUUID(),videoId:video.id,window:val('sWindow'),...metrics});
+ resetSnapshotForm();save();
 });
-document.getElementById('resetSnapshot').onclick=()=>{document.getElementById('snapshotForm').reset();document.getElementById('sDate').value=today()};
+document.getElementById('resetSnapshot').onclick=resetSnapshotForm;
+document.getElementById('cancelSnapshotEdit').onclick=resetSnapshotForm;
+function editSnapshot(id){const s=db.snapshots.find(x=>x.id===id);if(!s)return;editingSnapshotId=s.id;updateVideoSelect();document.getElementById('sVideo').value=s.videoId;document.getElementById('sWindow').value=s.window;document.getElementById('sDate').value=s.snapshotDate||today();SNAPSHOT_METRICS.forEach(key=>{const inputId={avgWatchSeconds:'sAvgWatch',avgPercentViewed:'sAvgPercentViewed',completionRate:'sCompletionRate',followers:'sFollowers'}[key]||'s'+key[0].toUpperCase()+key.slice(1);const isNa=(s.naMetrics||[]).includes(key)||s[key]===null||s[key]===undefined;document.getElementById(inputId+'Na').checked=isNa;document.getElementById(inputId).value=s[key]??0;});document.getElementById('sCreativeTreatment').value=s.creativeTreatment||'';syncSnapshotNa();document.getElementById('sVideo').disabled=true;document.getElementById('sWindow').disabled=true;document.getElementById('saveSnapshotButton').textContent='Save changes';document.getElementById('cancelSnapshotEdit').hidden=false;openTab('snapshots');document.getElementById('sViews').focus();}
 document.getElementById('musicForm').addEventListener('submit',e=>{e.preventDefault();const editId=val('mEditId');const existing=editId?db.music.find(x=>x.id===editId):null;const used=new Set(db.music.map(x=>String(x.internalId||'').trim()).filter(Boolean));const internalId=existing?.internalId||newMusicInternalId(used);const record={internalId,title:val('mTitle'),date:val('mDate'),status:val('mStatus'),type:val('mType'),release:val('mRelease'),code:val('mCode'),fileLocation:val('mFileLocation'),driveLink:val('mDriveLink'),videoId:val('mVideoId'),notes:val('mNotes')};if(existing)Object.assign(existing,record);else db.music.push({id:crypto.randomUUID(),...record});save();cancelMusicEdit();});
 const checks=['Dated composition drafts or notation','Original DAW / recording project files','Dated raw audio and final master export','Dated video project and original footage','Publication URLs and screenshots','Work title, authorship, and collaborator records','Copyright registration application / certificate (if applicable)','License, permission, or distribution records (if applicable)'];
 function updateWorkSelects(){['eWork','cWork'].forEach(id=>{let s=document.getElementById(id),old=s.value;s.innerHTML=db.music.length?db.music.map(m=>`<option value="${m.id}">${esc(m.title)}</option>`).join(''):'<option value="">Add a work first</option>';if([...s.options].some(o=>o.value===old))s.value=old});}
@@ -165,49 +166,52 @@ function editUploadAssets(id){
  v.assetIds=[...new Set(nums)].map(n=>db.assets[n-1].id);save();
 }
 function renderTimeAnalytics(){
- const period=val('timeAnalyticsWindow'),platform=val('timeAnalyticsPlatform');
- const shortPlatforms=['Instagram','Facebook','TikTok','YouTube Shorts'];
- const eligible=db.uploads.filter(v=>v.uploadTime&&(!platform||v.platform===platform)&&(!platform?shortPlatforms.includes(v.platform):true));
- const rows=[];
- eligible.forEach(v=>{
-  const snaps=db.snapshots.filter(s=>s.videoId===v.id&&s.window===period).sort((a,b)=>String(b.snapshotDate||'').localeCompare(String(a.snapshotDate||'')));
-  if(snaps.length)rows.push({video:v,s:snaps[0]});
- });
- const groups={};
- rows.forEach(({video:v,s})=>{
-  const key=v.uploadTime;
-  const g=groups[key]||(groups[key]={count:0,views:0,engagement:0,watch:0,watchCount:0,followers:0});
-  g.count++;g.views+=Number(s.views||0);g.engagement+=Number(s.likes||0)+Number(s.comments||0)+Number(s.shares||0);
-  if(Number(s.watch||0)>0){g.watch+=Number(s.watch);g.watchCount++}g.followers+=Number(s.followers||0);
- });
- const sorted=Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0]));
- const best=sorted.slice().sort((a,b)=>(b[1].views/Math.max(1,b[1].count))-(a[1].views/Math.max(1,a[1].count)))[0];
- document.getElementById('timeAnalyticsSummary').innerHTML=best?`<div class="notice">Strongest window in this sample: <b>${esc(best[0])}</b> · ${fmt(best[1].views/Math.max(1,best[1].count))} average views per video · ${best[1].count} video${best[1].count===1?'':'s'}</div>`:'<div class="empty">No matching snapshots yet. Record a snapshot for videos with an upload-time window to see comparisons.</div>';
- document.getElementById('timeAnalyticsTable').innerHTML=table(['Upload time','Videos','Total views','Avg. views / video','Engagement rate','Avg. watch min / video','Followers gained'],sorted.map(([k,g])=>`<tr><td><b>${esc(k)}</b></td><td>${g.count}</td><td>${fmt(g.views)}</td><td>${fmt(g.views/g.count)}</td><td>${g.views?(g.engagement/g.views*100).toFixed(2)+'%':'—'}</td><td>${g.watchCount?fmt(g.watch/g.watchCount):'—'}</td><td>${fmt(g.followers)}</td></tr>`));
+ const period=val('timeAnalyticsWindow'),platform=val('timeAnalyticsPlatform'),shortPlatforms=['Instagram','Facebook','TikTok','YouTube Shorts'];
+ const eligible=db.uploads.filter(v=>v.uploadTime&&(!platform||v.platform===platform)&&(!platform?shortPlatforms.includes(v.platform):true)),rows=[];
+ eligible.forEach(v=>{const snaps=db.snapshots.filter(s=>s.videoId===v.id&&s.window===period).sort((a,b)=>String(b.snapshotDate||'').localeCompare(String(a.snapshotDate||'')));if(snaps.length)rows.push({video:v,s:snaps[0]});});
+ const groups={};rows.forEach(({video:v,s})=>{const g=groups[v.uploadTime]||(groups[v.uploadTime]={count:0,views:0,viewCount:0,engagement:0,engagementCount:0,avgWatchSeconds:0,watchCount:0,followers:0});g.count++;const views=snapshotMetric(s,'views');if(views!==null){g.views+=views;g.viewCount++;}const engagement=engagementValue(s);if(engagement!==null){g.engagement+=engagement;g.engagementCount++;}if(views!==null&&engagement!==null){g.rateViews+=views;g.rateEngagement+=engagement;g.rateCount++;}const watch=snapshotMetric(s,'avgWatchSeconds');if(watch!==null){g.avgWatchSeconds+=watch;g.watchCount++;}const followers=snapshotMetric(s,'followers');if(followers!==null)g.followers+=followers;});
+ const sorted=Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0]));const best=sorted.filter(x=>x[1].viewCount).sort((a,b)=>(b[1].views/b[1].viewCount)-(a[1].views/a[1].viewCount))[0];
+ document.getElementById('timeAnalyticsSummary').innerHTML=best?`<div class="notice">Strongest window in this sample: <b>${esc(best[0])}</b> · ${fmt(best[1].views/best[1].viewCount)} average views per available video · ${best[1].viewCount} with views recorded</div>`:'<div class="empty">No matching snapshots yet. Record a snapshot for videos with an upload-time window to see comparisons.</div>';
+ document.getElementById('timeAnalyticsTable').innerHTML=table(['Upload time','Videos','Total views','Avg. views / video','Engagement rate','Avg. watch sec / video','Followers gained'],sorted.map(([k,g])=>`<tr><td><b>${esc(k)}</b></td><td>${g.count}</td><td>${fmt(g.views)}<div class="sub">${g.viewCount} available</div></td><td>${g.viewCount?fmt(g.views/g.viewCount):'N/A'}</td><td>${g.rateCount&&g.rateViews?((g.rateEngagement/g.rateViews)*100).toFixed(2)+'%':'N/A'}</td><td>${g.watchCount?fmt(g.avgWatchSeconds/g.watchCount):'N/A'}<div class="sub">${g.watchCount} available</div></td><td>${fmt(g.followers)}</td></tr>`));
 }
 function renderSnapshots(){
  let f=val('snapshotFilter')||'',list=db.snapshots.filter(s=>{let v=db.uploads.find(x=>x.id===s.videoId);return v&&(!f||v.platform===f)}).slice().reverse();
- document.getElementById('snapshotTable').innerHTML=table(['Video / platform','Window','Snapshot date','Views','Engagement','Watch / follows',''],list.map(s=>{let v=db.uploads.find(x=>x.id===s.videoId);return `<tr><td><b>${esc(v?.title||'Deleted video')}</b><div class="sub">${esc(v?.platform||'')}${v?.platform==='YouTube Long Format'?' · '+((v.contentCategory==='weeklyRecap'||v.weeklyRecapId)?'Weekly recap':'Standalone long-form'):''}</div></td><td>${esc(s.window==='lifetime'?'Lifetime':s.window==='24h'?'24 hours':s.window+' days')}</td><td>${esc(s.snapshotDate)}</td><td>${fmt(s.views)}</td><td>${fmt(s.likes)} likes<br>${fmt(s.comments)} comments<br>${fmt(s.shares)} shares</td><td>${fmt(s.watch)} min<br>${fmt(s.followers)} followers</td><td><button class="secondary danger" onclick="del('snapshots','${s.id}')">Delete</button></td></tr>`}));
+ const display=(s,k)=>snapshotMetric(s,k)===null?'N/A':analyticsNumber(snapshotMetric(s,k),k);
+ document.getElementById('snapshotTable').innerHTML=table(['Video / platform','Treatment','Window','Snapshot date','Views','Engagement','Retention','Followers',''],list.map(s=>{let v=db.uploads.find(x=>x.id===s.videoId);const eng=engagementValue(s);return `<tr><td><b>${esc(v?.title||'Deleted video')}</b><div class="sub">${esc(v?.platform||'')}</div></td><td>${esc(s.creativeTreatment==='cleanVisual'?'Clean Visual':s.creativeTreatment==='quoteOverlay'?'Quote Overlay':'Not classified')}</td><td>${esc(s.window==='lifetime'?'Lifetime':s.window==='24h'?'24 hours':s.window+' days')}</td><td>${esc(s.snapshotDate)}</td><td>${display(s,'views')}</td><td>${eng===null?'N/A':fmt(eng)} actions<div class="sub">Likes ${display(s,'likes')} · Comments ${display(s,'comments')} · Shares ${display(s,'shares')} · Saves ${display(s,'saves')}</div></td><td>${display(s,'avgWatchSeconds')}<div class="sub">Viewed ${display(s,'avgPercentViewed')} · Completed ${display(s,'completionRate')}</div></td><td>${display(s,'followers')}</td><td><div class="actions"><button class="secondary" onclick="editSnapshot('${s.id}')">Edit</button><button class="secondary danger" onclick="del('snapshots','${s.id}')">Delete</button></div></td></tr>`;}));
 }
 function editMusic(id){const m=db.music.find(x=>x.id===id);if(!m)return;document.getElementById('mEditId').value=m.id;['Title','Date','Status','Type','Release','Code','FileLocation','DriveLink','VideoId','Notes'].forEach((suffix)=>{const key={Title:'title',Date:'date',Status:'status',Type:'type',Release:'release',Code:'code',FileLocation:'fileLocation',DriveLink:'driveLink',VideoId:'videoId',Notes:'notes'}[suffix];const el=document.getElementById('m'+suffix);if(el)el.value=m[key]||''});document.getElementById('musicSaveBtn').textContent='Save changes';document.getElementById('musicCancelBtn').style.display='inline-flex';document.getElementById('musicForm').scrollIntoView({behavior:'smooth',block:'start'});}
 function cancelMusicEdit(){const f=document.getElementById('musicForm');f.reset();document.getElementById('mEditId').value='';document.getElementById('mDate').value=today();document.getElementById('musicSaveBtn').textContent='Save work';document.getElementById('musicCancelBtn').style.display='none';}
 function renderMusic(){document.getElementById('musicTable').innerHTML=table(['Work','Type / status','Dates','File location / Google Drive','Internal ID / registration / notes',''],db.music.slice().reverse().map(m=>{const v=db.uploads.find(x=>x.id===m.videoId);const link=String(m.driveLink||'').trim();const safeLink=/^https:\/\//i.test(link)?`<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">Open Google Drive file</a>`:'—';return `<tr><td><b>${esc(m.title)}</b></td><td>${esc(m.type)}<br><span class="sub">${esc(m.status)}</span></td><td>Created: ${esc(m.date||'—')}<br>Published: ${esc(m.release||'—')}</td><td>${esc(m.fileLocation||'—')}<div class="sub">${safeLink}</div><div class="sub">${esc(v?.title||'No video linked')}</div></td><td><strong>${esc(m.internalId||'—')}</strong><br><span class="sub">Registration: ${esc(m.code||'—')}</span><br><span class="sub">${esc(m.notes||'')}</span></td><td><button class="secondary" onclick="editMusic('${m.id}')">Edit</button> <button class="secondary danger" onclick="del('music','${m.id}')">Delete</button></td></tr>`}))}
 function renderYoutubeLongAnalytics(){
- const category=val('ytLongCategory')||'all',windowChoice=val('ytLongWindow')||'7';
- const uploads=db.uploads.filter(v=>v.platform==='YouTube Long Format'&&(category==='all'||(v.contentCategory||(v.weeklyRecapId?'weeklyRecap':'standaloneLongForm'))===category));
+ const category=val('ytLongCategory')||'all',windowChoice=val('ytLongWindow')||'7';const uploads=db.uploads.filter(v=>v.platform==='YouTube Long Format'&&(category==='all'||(v.contentCategory||(v.weeklyRecapId?'weeklyRecap':'standaloneLongForm'))===category));
  const rows=uploads.map(v=>{const snapshots=db.snapshots.filter(s=>s.videoId===v.id&&s.window===windowChoice).sort((a,b)=>String(b.snapshotDate||'').localeCompare(String(a.snapshotDate||'')));return {video:v,s:snapshots[0]||null};});
- const sum=k=>rows.reduce((n,r)=>n+Number(r.s?.[k]||0),0),covered=rows.filter(r=>r.s).length;
- document.getElementById('ytLongUploads').textContent=fmt(uploads.length);document.getElementById('ytLongViews').textContent=fmt(sum('views'));document.getElementById('ytLongEngagement').textContent=fmt(sum('likes')+sum('comments')+sum('shares'));document.getElementById('ytLongWatch').textContent=fmt(sum('watch'));document.getElementById('ytLongSubscribers').textContent=fmt(sum('followers'));
- document.getElementById('ytLongSnapshotCoverage').textContent=`${covered} of ${uploads.length} upload(s) have a ${windowChoice==='lifetime'?'lifetime':windowChoice+'-day'} snapshot. Combined totals include both standalone long-form videos and weekly recaps when “All YouTube Long Format” is selected.`;
- document.getElementById('ytLongAnalyticsTable').innerHTML=table(['Upload','Category','Published','Views','Likes','Comments','Shares','Watch min','Followers','Snapshot date'],rows.sort((a,b)=>String(b.video.publishDate||'').localeCompare(String(a.video.publishDate||''))).map(({video:v,s})=>{const recap=db.weeklyRecaps.find(r=>r.id===v.weeklyRecapId),label=(v.contentCategory==='weeklyRecap'||v.weeklyRecapId)?'Weekly recap':'Standalone long-form';return `<tr><td><b>${esc(v.title||'Untitled upload')}</b>${recap?`<div class="sub">${esc(recap.fullTitle||recapFullTitle(recap))}</div>`:''}${v.url?`<div class="sub"><a href="${esc(v.url)}" target="_blank" rel="noopener">Open YouTube video</a></div>`:''}</td><td>${label}</td><td>${esc(v.publishDate||'—')}</td><td>${s?fmt(s.views):'—'}</td><td>${s?fmt(s.likes):'—'}</td><td>${s?fmt(s.comments):'—'}</td><td>${s?fmt(s.shares):'—'}</td><td>${s?fmt(s.watch):'—'}</td><td>${s?fmt(s.followers):'—'}</td><td>${esc(s?.snapshotDate||'No snapshot')}</td></tr>`;}));
+ const sum=k=>{const vals=rows.map(r=>snapshotMetric(r.s,k)).filter(x=>x!==null);return vals.length?vals.reduce((a,b)=>a+b,0):null},covered=rows.filter(r=>r.s).length;const engagementRows=rows.filter(r=>r.s&&engagementValue(r.s)!==null),watchRows=rows.filter(r=>r.s&&snapshotMetric(r.s,'avgWatchSeconds')!==null);
+ document.getElementById('ytLongUploads').textContent=fmt(uploads.length);document.getElementById('ytLongViews').textContent=analyticsNumber(sum('views'),'views');document.getElementById('ytLongEngagement').textContent=engagementRows.length?fmt(engagementRows.reduce((n,r)=>n+engagementValue(r.s),0)):'N/A';document.getElementById('ytLongWatch').textContent=watchRows.length?fmt(watchRows.reduce((n,r)=>n+snapshotMetric(r.s,'avgWatchSeconds'),0)/watchRows.length):'N/A';document.getElementById('ytLongSubscribers').textContent=analyticsNumber(sum('followers'),'followers');
+ document.getElementById('ytLongSnapshotCoverage').textContent=`${covered} of ${uploads.length} upload(s) have a ${windowChoice==='lifetime'?'lifetime':windowChoice+'-day'} snapshot. Engagement includes only snapshots with all four engagement metrics available. Combined totals include standalone long-form videos and weekly recaps when “All YouTube Long Format” is selected.`;
+ const disp=(s,k)=>snapshotMetric(s,k)===null?'N/A':fmt(snapshotMetric(s,k));document.getElementById('ytLongAnalyticsTable').innerHTML=table(['Upload','Category','Published','Views','Likes','Comments','Shares','Saves','Avg watch sec','Avg viewed','Completion','Followers','Snapshot date'],rows.sort((a,b)=>String(b.video.publishDate||'').localeCompare(String(a.video.publishDate||''))).map(({video:v,s})=>{const recap=db.weeklyRecaps.find(r=>r.id===v.weeklyRecapId),label=(v.contentCategory==='weeklyRecap'||v.weeklyRecapId)?'Weekly recap':'Standalone long-form';return `<tr><td><b>${esc(v.title||'Untitled upload')}</b>${recap?`<div class="sub">${esc(recap.fullTitle||recapFullTitle(recap))}</div>`:''}${v.url?`<div class="sub"><a href="${esc(v.url)}" target="_blank" rel="noopener">Open YouTube video</a></div>`:''}</td><td>${label}</td><td>${esc(v.publishDate||'—')}</td><td>${s?disp(s,'views'):'—'}</td><td>${s?disp(s,'likes'):'—'}</td><td>${s?disp(s,'comments'):'—'}</td><td>${s?disp(s,'shares'):'—'}</td><td>${s?disp(s,'saves'):'—'}</td><td>${s?disp(s,'avgWatchSeconds'):'—'}</td><td>${s?disp(s,'avgPercentViewed'):'—'}</td><td>${s?disp(s,'completionRate'):'—'}</td><td>${s?disp(s,'followers'):'—'}</td><td>${esc(s?.snapshotDate||'No snapshot')}</td></tr>`;}));
 }
 
+function latestSnapshotByUpload(){
+ const latest=new Map();
+ db.snapshots.forEach(s=>{
+  const old=latest.get(s.videoId);
+  const stamp=String(s.snapshotDate||'');
+  const oldStamp=String(old?.snapshotDate||'');
+  if(!old||stamp>oldStamp||(stamp===oldStamp&&String(s.id||'')>String(old.id||'')))latest.set(s.videoId,s);
+ });
+ return latest;
+}
+function viewsToDateByUpload(){
+ const latest=latestSnapshotByUpload(),rows=[];
+ latest.forEach((snapshot,videoId)=>{
+  const upload=db.uploads.find(v=>v.id===videoId);
+  if(upload)rows.push({upload,snapshot,views:snapshotMetric(snapshot,'views')});
+ });
+ return rows;
+}
 function renderInsights(){
- const metric=val('insightMetric');
- const latest={};
- db.snapshots.filter(s=>s.window==='lifetime').forEach(s=>{const old=latest[s.videoId];if(!old||String(s.snapshotDate||'')>String(old.snapshotDate||''))latest[s.videoId]=s});
- const rows=Object.entries(latest).map(([id,s])=>{const v=db.uploads.find(x=>x.id===id)||{};const views=Number(s.views||0),engagement=Number(s.likes||0)+Number(s.comments||0)+Number(s.shares||0),followers=Number(s.followers||0);return {title:v.title||'Untitled video',platform:v.platform||'Unknown',contentCategory:v.contentCategory||(v.weeklyRecapId?'weeklyRecap':'standaloneLongForm'),date:v.publishDate||'',views,engagement,engagementRate:views?engagement/views*100:0,followerRate:views?followers/views*1000:0,followers,watch:Number(s.watch||0),snapshotDate:s.snapshotDate||''}}).sort((a,b)=>b[metric]-a[metric]).slice(0,10);
- document.getElementById('insightsTable').innerHTML=table(['Video / platform','Publish date','Metric','Snapshot date'],rows.map(r=>`<tr><td><b>${esc(r.title)}</b><div class="sub">${esc(r.platform)}${r.platform==='YouTube Long Format' ? ' · '+(r.contentCategory==='weeklyRecap'?'Weekly recap':'Standalone long-form') : ''}</div></td><td>${esc(r.date||'—')}</td><td>${metric==='engagementRate'?r[metric].toFixed(2)+'%':metric==='followerRate'?r[metric].toFixed(2):fmt(r[metric])+(metric==='engagement'?' actions':metric==='watch'?' min':'')}</td><td>${esc(r.snapshotDate||'—')}</td></tr>`));
+ const metric=val('insightMetric');const rows=viewsToDateByUpload().map(({upload:v,snapshot:s,views})=>{const engagement=engagementValue(s),followers=snapshotMetric(s,'followers');return {title:v.title||'Untitled video',platform:v.platform||'Unknown',contentCategory:v.contentCategory||(v.weeklyRecapId?'weeklyRecap':'standaloneLongForm'),date:v.publishDate||'',views,engagement,engagementRate:views!==null&&views>0&&engagement!==null?engagement/views*100:null,followerRate:views!==null&&views>0&&followers!==null?followers/views*1000:null,followers,avgWatchSeconds:snapshotMetric(s,'avgWatchSeconds'),avgPercentViewed:snapshotMetric(s,'avgPercentViewed'),completionRate:snapshotMetric(s,'completionRate'),saves:snapshotMetric(s,'saves'),snapshotDate:s.snapshotDate||'',checkpoint:s.window||''}}).filter(r=>r[metric]!==null).sort((a,b)=>b[metric]-a[metric]).slice(0,10);
+ document.getElementById('insightsTable').innerHTML=table(['Video / platform','Publish date','Metric','Latest snapshot'],rows.map(r=>`<tr><td><b>${esc(r.title)}</b><div class="sub">${esc(r.platform)}${r.platform==='YouTube Long Format' ? ' · '+(r.contentCategory==='weeklyRecap'?'Weekly recap':'Standalone long-form') : ''}</div></td><td>${esc(r.date||'—')}</td><td>${analyticsNumber(r[metric],metric)+(metric==='engagement'?' actions':metric==='followers'?' followers':'')}</td><td>${esc(r.snapshotDate||'—')}<div class="sub">${esc(r.checkpoint==='24h'?'24 hours':r.checkpoint==='lifetime'?'Lifetime':r.checkpoint?r.checkpoint+' days':'')}</div></td></tr>`));
 }
 function updateLibrarySelects(){
  const options=(items,empty)=>`<option value="">${empty}</option>`+items.map(x=>`<option value="${esc(x.id)}">${esc(x.title)}</option>`).join('');
@@ -220,9 +224,14 @@ function updateLibrarySelects(){
 }
 function renderPlanChooser(){
  const chooser=document.getElementById('planChooser');if(!chooser)return;
- const type=val('plannerContentType')||'video',prior=chooser.value,group=document.getElementById('existingPlanOptions');
- const items=db.plans.filter(p=>type==='photo'?p.contentType==='photo':p.contentType!=='photo').slice().sort((a,b)=>String(a.title||'').localeCompare(String(b.title||'')));
- group.innerHTML=items.map(p=>`<option value="${esc(p.id)}">${esc(p.title||'Untitled plan')}</option>`).join('');
+ const type=val('plannerContentType')||'video',prior=chooser.value;
+ const unpublishedGroup=document.getElementById('unpublishedPlanOptions'),publishedGroup=document.getElementById('publishedPlanOptions');
+ const items=db.plans.filter(p=>type==='photo'?p.contentType==='photo':p.contentType!=='photo').slice();
+ const isPublished=p=>p.status==='Published'||p.status==='Entries created';
+ const byTitle=(a,b)=>String(a.title||'Untitled plan').localeCompare(String(b.title||'Untitled plan'),undefined,{sensitivity:'base',numeric:true});
+ const unpublished=items.filter(p=>!isPublished(p)).sort(byTitle),published=items.filter(isPublished).sort(byTitle);
+ unpublishedGroup.innerHTML=unpublished.map(p=>`<option value="${esc(p.id)}">${esc(p.title||'Untitled plan')}</option>`).join('');
+ publishedGroup.innerHTML=published.map(p=>`<option value="${esc(p.id)}">(P) ${esc(p.title||'Untitled plan')}</option>`).join('');
  chooser.value=(prior==='__new__'||items.some(p=>p.id===prior))?prior:'';
  document.getElementById('plannerVideoEditor').hidden=type!=='video';document.getElementById('plannerVideoTable').hidden=type!=='video';
  document.getElementById('plannerPhotoEditor').hidden=type!=='photo';document.getElementById('plannerPhotoTable').hidden=type!=='photo';
@@ -253,7 +262,7 @@ function renderProjectTools(){
  const options='<option value="">Select a project</option>'+db.plans.map(p=>`<option value="${esc(p.id)}">${p.contentType==='photo'?'[Photo]':'[Video]'} ${esc(p.title)}</option>`).join('');
  ['checklistProject','builderProject'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const prior=el.value;el.innerHTML=options;if(db.plans.some(p=>p.id===prior))el.value=prior;});
  const d=db.brandDefaults||{};
- [['brandName','brandName'],['brandTagline','tagline'],['brandCredit','musicCredit'],['brandCopyright','copyright'],['brandHashtags','hashtags']].forEach(([id,key])=>{const el=document.getElementById(id);if(el&&document.activeElement!==el)el.value=d[key]||''});
+ [['brandName','brandName'],['brandTagline','tagline'],['brandCredit','musicCredit'],['brandCopyright','copyright'],['brandHashtags','hashtags'],['brandTikTokHashtags','tiktokHashtags']].forEach(([id,key])=>{const el=document.getElementById(id);if(el&&document.activeElement!==el)el.value=d[key]||''});
  renderProjectChecklist();renderUploadBuilder();
 }
 function renderProjectChecklist(){
@@ -269,7 +278,7 @@ function saveProjectChecklist(){
  save();document.getElementById('checklistProject').value=id;renderProjectChecklist();
 }
 function saveBrandDefaults(){
- db.brandDefaults={brandName:val('brandName').trim()||'Prairie Preludes',tagline:val('brandTagline').trim()||'A quieter kind of beautiful.',musicCredit:val('brandCredit').trim(),copyright:val('brandCopyright').trim(),hashtags:val('brandHashtags').trim()};
+ db.brandDefaults={brandName:val('brandName').trim()||'Prairie Preludes',tagline:val('brandTagline').trim()||'A quieter kind of beautiful.',musicCredit:val('brandCredit').trim(),copyright:val('brandCopyright').trim(),hashtags:val('brandHashtags').trim(),tiktokHashtags:val('brandTikTokHashtags').trim()};
  save();document.getElementById('brandSaveMsg').textContent='Brand defaults saved on this device.';
 }
 function platformCopy(p,platform,extra){
@@ -279,7 +288,7 @@ function platformCopy(p,platform,extra){
  const signature='A quieter kind of beautiful.';
  const tagline=(d.tagline||signature).trim();
  const isPhoto=p.contentType==='photo'; const description=[p.caption||'',scene?`Scene: ${scene}`:'',signature,tagline.toLowerCase()===signature.toLowerCase()?'':tagline,music?`Music: ${music.title}`:'',isPhoto?'':(d.musicCredit||''),d.copyright||''].filter(Boolean).join('\n\n');
- const tags=[p.hashtags||'',d.hashtags||''].filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+ const tags=[p.hashtags||'',d.hashtags||'',...(platform==='TikTok'?[d.tiktokHashtags||'']:[])].filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
  if(platform==='YouTube')return `${title}\n\n${description}\n\n${tags}`;
  if(platform==='Instagram')return `${description}\n\n${tags}`;
  return `${title}\n\n${description}\n\n${tags}`;
@@ -304,29 +313,29 @@ function renderAssets(){
 }
 function renderCopies(){document.getElementById('copyTable').innerHTML=table(['Found','Work / platform','Status','Suspected URL & notes',''],db.copies.slice().reverse().map(c=>{let m=db.music.find(x=>x.id===c.workId);return `<tr><td>${esc(c.date)}</td><td>${esc(m?.title||'Unlinked work')}<br>${esc(c.platform)}</td><td>${esc(c.status)}</td><td><a href="${esc(c.url)}" target="_blank" rel="noopener">Open suspected copy</a><div class="sub">${esc(c.evidence)} ${esc(c.action)}</div></td><td><button class="secondary danger" onclick="del('copies','${c.id}')">Delete</button></td></tr>`}))}
 function renderReviews(){document.getElementById('reviewTable').innerHTML=table(['Quarter','What worked','Learnings','Next steps',''],db.reviews.slice().reverse().map(r=>`<tr><td><b>${esc(r.quarter)} ${esc(r.year)}</b><div class="sub">${esc(r.saved)}</div></td><td>${esc(r.wins)}</td><td>${esc(r.learn)}</td><td>${esc(r.next)}<div class="sub">${esc(r.notes)}</div></td><td><button class="secondary danger" onclick="del('reviews','${r.id}')">Delete</button></td></tr>`))}
-function renderChart(el,items){let max=Math.max(1,...items.map(x=>x.value));el.innerHTML=items.length?items.map(x=>`<div class="barrow"><span>${esc(x.label)}</span><div class="bar"><i style="width:${Math.max(0,x.value)/max*100}%"></i></div><b>${fmt(x.value)}</b></div>`).join(''):'<div class="empty">Add snapshots to see analytics.</div>'}
+function renderChart(el,items){const valid=items.filter(x=>x.value!==null&&x.value!==undefined&&Number.isFinite(Number(x.value)));let max=Math.max(1,...valid.map(x=>Number(x.value)));el.innerHTML=items.length?items.map(x=>`<div class="barrow"><span>${esc(x.label)}</span><div class="bar"><i style="width:${x.value===null||x.value===undefined?0:Math.max(0,Number(x.value))/max*100}%"></i></div><b>${x.value===null||x.value===undefined?'N/A':fmt(x.value)}</b></div>`).join(''):'<div class="empty">Add snapshots to see analytics.</div>'}
 function renderMonthly(){
  const month=val('monthSelect'), platform=val('monthPlatform'), windowChoice=val('monthWindow');
  const list=db.snapshots.filter(s=>{
   const v=db.uploads.find(x=>x.id===s.videoId);
   return v && (s.snapshotDate||'').slice(0,7)===month && (!platform||v.platform===platform) && (windowChoice==='all'||s.window===windowChoice);
  });
- const sum=k=>list.reduce((a,s)=>a+Number(s[k]||0),0);
+ const sum=k=>metricSum(list,k);
  document.getElementById('monthCount').textContent=fmt(list.length);
- document.getElementById('monthViews').textContent=fmt(sum('views'));
- document.getElementById('monthLikes').textContent=fmt(sum('likes'));
- document.getElementById('monthComments').textContent=fmt(sum('comments'));
+ document.getElementById('monthViews').textContent=analyticsNumber(sum('views'),'views');
+ document.getElementById('monthLikes').textContent=analyticsNumber(sum('likes'),'likes');
+ document.getElementById('monthComments').textContent=analyticsNumber(sum('comments'),'comments');
  const platforms=['YouTube Shorts','YouTube Long Format','Instagram','Facebook','TikTok'];
- const byPlatform=platforms.map(p=>({label:p,value:list.filter(s=>db.uploads.find(v=>v.id===s.videoId)?.platform===p).reduce((a,s)=>a+Number(s.views||0),0)}));
- const genres=[...new Set(list.map(s=>db.uploads.find(v=>v.id===s.videoId)?.genre||'Other'))].map(g=>({label:g,value:list.filter(s=>(db.uploads.find(v=>v.id===s.videoId)?.genre||'Other')===g).reduce((a,s)=>a+Number(s.views||0),0)}));
+ const byPlatform=platforms.map(p=>{const vals=list.filter(s=>db.uploads.find(v=>v.id===s.videoId)?.platform===p).map(s=>snapshotMetric(s,'views')).filter(x=>x!==null);return {label:p,value:vals.length?vals.reduce((a,b)=>a+b,0):null};});
+ const genres=[...new Set(list.map(s=>db.uploads.find(v=>v.id===s.videoId)?.genre||'Other'))].map(g=>{const vals=list.filter(s=>(db.uploads.find(v=>v.id===s.videoId)?.genre||'Other')===g).map(s=>snapshotMetric(s,'views')).filter(x=>x!==null);return {label:g,value:vals.length?vals.reduce((a,b)=>a+b,0):null};});
  renderChart(document.getElementById('monthPlatformChart'),byPlatform);
  renderChart(document.getElementById('monthGenreChart'),genres);
- renderChart(document.getElementById('monthEngagementChart'),platforms.map(p=>({label:p,value:list.filter(s=>db.uploads.find(v=>v.id===s.videoId)?.platform===p).reduce((a,s)=>a+Number(s.likes||0)+Number(s.comments||0)+Number(s.shares||0),0)})));
+ renderChart(document.getElementById('monthEngagementChart'),platforms.map(p=>{const vals=list.filter(s=>db.uploads.find(v=>v.id===s.videoId)?.platform===p).map(engagementValue).filter(x=>x!==null);return {label:p,value:vals.length?vals.reduce((a,b)=>a+b,0):null};}));
  renderChart(document.getElementById('monthWindowChart'),['24h','7','30','90','lifetime'].map(w=>({label:w==='24h'?'24 hours':w==='lifetime'?'Lifetime':w+' days',value:list.filter(s=>s.window===w).length})));
- document.getElementById('monthSnapshotTable').innerHTML=table(['Date','Video / platform','Genre','Window','Views','Likes','Comments','Shares'],list.slice().sort((a,b)=>(b.snapshotDate||'').localeCompare(a.snapshotDate||'')).map(s=>{let v=db.uploads.find(x=>x.id===s.videoId)||{};return `<tr><td>${esc(s.snapshotDate)}</td><td><b>${esc(v.title||'Deleted video')}</b><div class="sub">${esc(v.platform||'')}${v.platform==='YouTube Long Format'?' · '+((v.contentCategory==='weeklyRecap'||v.weeklyRecapId)?'Weekly recap':'Standalone long-form'):''}</div></td><td>${esc(v.genre||'')}</td><td>${esc(s.window==='24h'?'24 hours':s.window==='lifetime'?'Lifetime':s.window+' days')}</td><td>${fmt(s.views)}</td><td>${fmt(s.likes)}</td><td>${fmt(s.comments)}</td><td>${fmt(s.shares)}</td></tr>`}));
+ document.getElementById('monthSnapshotTable').innerHTML=table(['Date','Video / platform','Genre','Window','Treatment','Views','Likes','Comments','Shares','Saves','Avg watch','Avg viewed','Completion','Followers'],list.slice().sort((a,b)=>(b.snapshotDate||'').localeCompare(a.snapshotDate||'')).map(s=>{let v=db.uploads.find(x=>x.id===s.videoId)||{},d=k=>snapshotMetric(s,k)===null?'N/A':analyticsNumber(snapshotMetric(s,k),k);return `<tr><td>${esc(s.snapshotDate)}</td><td><b>${esc(v.title||'Deleted video')}</b><div class="sub">${esc(v.platform||'')}</div></td><td>${esc(v.genre||'')}</td><td>${esc(s.window==='24h'?'24 hours':s.window==='lifetime'?'Lifetime':s.window+' days')}</td><td>${esc(s.creativeTreatment==='cleanVisual'?'Clean Visual':s.creativeTreatment==='quoteOverlay'?'Quote Overlay':'Not classified')}</td><td>${d('views')}</td><td>${d('likes')}</td><td>${d('comments')}</td><td>${d('shares')}</td><td>${d('saves')}</td><td>${d('avgWatchSeconds')}</td><td>${d('avgPercentViewed')}</td><td>${d('completionRate')}</td><td>${d('followers')}</td></tr>`}));
  const groups={};
- list.forEach(s=>{let v=db.uploads.find(x=>x.id===s.videoId)||{},key=s.videoId+'|'+s.window;groups[key]??={title:v.title||'Deleted video',platform:v.platform||'',genre:v.genre||'',window:s.window,views:0,likes:0,comments:0,shares:0,count:0};groups[key].views+=Number(s.views||0);groups[key].likes+=Number(s.likes||0);groups[key].comments+=Number(s.comments||0);groups[key].shares+=Number(s.shares||0);groups[key].count++});
- document.getElementById('monthVideoTable').innerHTML=table(['Video','Platform','Window','Snapshots','Views','Likes','Comments','Shares'],Object.values(groups).sort((a,b)=>b.views-a.views).map(g=>`<tr><td><b>${esc(g.title)}</b><div class="sub">${esc(g.genre)}</div></td><td>${esc(g.platform)}</td><td>${esc(g.window==='24h'?'24 hours':g.window==='lifetime'?'Lifetime':g.window+' days')}</td><td>${fmt(g.count)}</td><td>${fmt(g.views)}</td><td>${fmt(g.likes)}</td><td>${fmt(g.comments)}</td><td>${fmt(g.shares)}</td></tr>`));
+ list.forEach(s=>{let v=db.uploads.find(x=>x.id===s.videoId)||{},key=s.videoId+'|'+s.window;groups[key]??={title:v.title||'Deleted video',platform:v.platform||'',genre:v.genre||'',window:s.window,views:0,likes:0,comments:0,shares:0,viewsN:0,likesN:0,commentsN:0,sharesN:0,count:0};['views','likes','comments','shares'].forEach(k=>{const x=snapshotMetric(s,k);if(x!==null){groups[key][k]+=x;groups[key][k+'N']++;}});groups[key].count++});
+ document.getElementById('monthVideoTable').innerHTML=table(['Video','Platform','Window','Snapshots','Views','Likes','Comments','Shares'],Object.values(groups).sort((a,b)=>b.views-a.views).map(g=>`<tr><td><b>${esc(g.title)}</b><div class="sub">${esc(g.genre)}</div></td><td>${esc(g.platform)}</td><td>${esc(g.window==='24h'?'24 hours':g.window==='lifetime'?'Lifetime':g.window+' days')}</td><td>${fmt(g.count)}</td><td>${g.viewsN?fmt(g.views):'N/A'}</td><td>${g.likesN?fmt(g.likes):'N/A'}</td><td>${g.commentsN?fmt(g.comments):'N/A'}</td><td>${g.sharesN?fmt(g.shares):'N/A'}</td></tr>`));
 }
 
 function renderCrossPlatform(){
@@ -351,19 +360,19 @@ function renderCrossPlatform(){
   const available=platforms.filter(p=>data[p]);
   return {...g,data,available};
  }).filter(g=>g.available.length>0).sort((a,b)=>a.title.localeCompare(b.title));
- const metricValue=s=>!s?null:metric==='engagement'?(Number(s.likes||0)+Number(s.comments||0)+Number(s.shares||0)):metric==='watchMinutes'?Number(s.watch||0):metric==='followersGained'?Number(s.followers||0):Number(s[metric]||0);
- const totals=platforms.map(p=>({label:p,value:rows.reduce((sum,g)=>sum+(metricValue(g.data[p])||0),0)}));
+ const metricValue=s=>!s?null:metric==='engagement'?engagementValue(s):metric==='followersGained'?snapshotMetric(s,'followers'):snapshotMetric(s,metric);
+ const totals=platforms.map(p=>{const values=rows.map(g=>metricValue(g.data[p])).filter(x=>x!==null);return {label:p,value:values.length?values.reduce((a,b)=>a+b,0):null};});
  const totalSnapshots=rows.reduce((n,g)=>n+g.available.length,0);
  const matched=rows.filter(g=>g.available.length>=2).length;
- const leader=totals.slice().sort((a,b)=>b.value-a.value)[0];
+ const leader=totals.filter(x=>x.value!==null).slice().sort((a,b)=>b.value-a.value)[0];
  document.getElementById('compareMatched').textContent=fmt(matched);
  document.getElementById('compareEntries').textContent=fmt(rows.reduce((n,g)=>n+platforms.filter(p=>g.entries[p]).length,0));
  document.getElementById('compareLeader').textContent=leader&&leader.value>0?leader.label:'—';
  document.getElementById('compareSnapshots').textContent=fmt(totalSnapshots);
  renderChart(document.getElementById('compareChart'),totals);
- const metricLabel=metric==='engagement'?'Engagement':metric==='watchMinutes'?'Watch minutes':metric==='followersGained'?'Followers gained':'Views';
+ const metricLabel=metric==='engagement'?'Engagement':metric==='avgWatchSeconds'?'Average watch seconds':metric==='followersGained'?'Followers gained':'Views';
  document.getElementById('compareTable').innerHTML=table(['Video / publish date','Genre',...platforms.map(p=>p+' '+metricLabel)],rows.map(g=>{
-  const cells=platforms.map(p=>`<td>${g.data[p]?fmt(metricValue(g.data[p]))+'<div class="sub">Snapshot: '+esc(g.data[p].snapshotDate||'date n/a')+'</div>': '—'}</td>`).join('');
+  const cells=platforms.map(p=>`<td>${g.data[p]?(metricValue(g.data[p])===null?'N/A':fmt(metricValue(g.data[p])))+'<div class="sub">Snapshot: '+esc(g.data[p].snapshotDate||'date n/a')+'</div>': '—'}</td>`).join('');
   return `<tr><td><b>${esc(g.title)}</b><div class="sub">${esc(g.publishDate||'No publish date')} · ${g.available.length} platform${g.available.length===1?'':'s'} with data</div></td><td>${esc(g.genre)}</td>${cells}</tr>`;
  }));
 }
@@ -387,7 +396,7 @@ function renderFootageUsage(){
 
 let calendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
 let calendarSelectedDate=localDateString(new Date());
-function localDateString(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function localDateString(d){return denverDateString(d);}
 function isFuturePublishDate(date){return !!date&&date>localDateString(new Date());}
 function rejectFuturePublishedDate(date,kind='project'){if(isFuturePublishDate(date)){alert(`A ${kind} cannot be marked as published on a future date. Choose today or an earlier date, or keep it in a pre-publication stage.`);return true;}return false;}
 function preparednessWeight(status){return status==='Ready to publish'?2:1;}
@@ -437,6 +446,30 @@ function selectCalendarDate(date,compact=false){calendarSelectedDate=date;render
 function changeCalendarMonth(delta){calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()+delta,1);renderPublishingCalendar();}
 function goCalendarToday(){const now=new Date();calendarMonth=new Date(now.getFullYear(),now.getMonth(),1);calendarSelectedDate=localDateString(now);renderPublishingCalendar();}
 
+function snapshotDueItems(){
+ const todayStr=localToday(),days=[['24h',1],['7',7],['30',30],['90',90]],items=[];
+ db.uploads.forEach(v=>{
+  if(!v.publishDate)return;
+  const published=dateObj(v.publishDate);if(!published)return;
+  days.forEach(([window,n])=>{
+   const due=dateStr(addDays(published,n));
+   const recorded=db.snapshots.some(s=>s.videoId===v.id&&s.window===window);
+   if(!recorded&&due<=todayStr)items.push({video:v,window,due,overdue:due<todayStr});
+  });
+ });
+ return items.sort((a,b)=>a.due.localeCompare(b.due)||a.video.title.localeCompare(b.video.title)||a.window.localeCompare(b.window));
+}
+function startSnapshotEntry(videoId,window){
+ updateVideoSelect();
+ const videoSelect=document.getElementById('sVideo'),windowSelect=document.getElementById('sWindow');
+ videoSelect.value=videoId;windowSelect.value=window;document.getElementById('sDate').value=today();
+ openTab('snapshots');document.getElementById('sViews').focus();
+}
+function renderSnapshotsDue(){
+ const host=document.getElementById('ccSnapshotsDue');if(!host)return;
+ const items=snapshotDueItems();
+ host.innerHTML=items.length?`<div class="snapshot-due-scroll"><table class="snapshot-due-table"><thead><tr><th>Add snapshot</th><th>Video title</th><th>Platform</th><th>Checkpoint</th><th>Published date</th></tr></thead><tbody>${items.map(x=>`<tr><td><button class="primary" onclick="startSnapshotEntry('${x.video.id}','${x.window}')">Add Snapshot</button></td><td><b>${esc(x.video.title)}</b></td><td>${esc(x.video.platform)}</td><td class="${x.overdue?'snapshot-overdue':''}">${esc(x.window==='24h'?'24 hours':x.window+' days')}${x.overdue?' <span class="snapshot-overdue-label">OVERDUE</span>':''}</td><td>${esc(x.video.publishDate)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No snapshots due today.</div>';
+}
 function renderCommandCenter(){
  const active=db.plans.filter(p=>!['Published','Entries created'].includes(p.status));
  const todayStr=localToday(),end=new Date();end.setDate(end.getDate()+14);const endStr=localDateString(end);
@@ -447,7 +480,7 @@ function renderCommandCenter(){
  document.getElementById('ccNext').innerHTML=upcoming.length?upcoming.slice(0,5).map(p=>`<div class="command-item"><strong>${esc(p.title)}</strong><small>${esc(p.plannedDate)} · ${esc(p.status||'Idea')} · ${(p.platforms||[]).length} platform(s)</small><div><button class="secondary" onclick="${p.contentType==='photo'?'editPhotoProject':'editPlan'}('${p.id}')">Open project</button></div></div>`).join(''):'<div class="empty">No planned deadlines in the next 14 days. Add or schedule a project to see it here.</div>';
  const attention=[];db.plans.filter(p=>!['Published','Entries created'].includes(p.status)).forEach(p=>{if(!(p.assetId||(p.assetIds||[]).length))attention.push({title:p.title,detail:'No footage asset linked',id:p.id});if(!(p.platforms||[]).length)attention.push({title:p.title,detail:'No target platforms selected',id:p.id});if(p.plannedDate&&p.plannedDate<todayStr)attention.push({title:p.title,detail:'Planned date has passed',id:p.id})});
  document.getElementById('ccAttention').innerHTML=attention.length?attention.slice(0,8).map(a=>`<div class="command-item"><strong>${esc(a.title)}</strong><small>${esc(a.detail)}</small><div><button class="secondary" onclick="editPlan('${a.id}')">Review project</button></div></div>`).join(''):'<div class="notice">No obvious project gaps detected. This check uses the project fields currently recorded in the app.</div>';
- renderUpcomingReadiness();const fieldHost=document.getElementById('ccFieldSessions');if(fieldHost){const sessions=db.fieldSessions.filter(x=>x.date&&x.date>=todayStr&&x.date<=endStr&&x.status!=='Archived').sort((a,b)=>a.date.localeCompare(b.date));fieldHost.innerHTML=sessions.length?sessions.slice(0,6).map(x=>`<div class="command-item"><strong>☼ ${esc(x.name)}</strong><small>${esc(x.date)} ${esc(x.time||'')} · ${esc(x.location||'')} · ${esc(x.status||'Planned')}</small><div><button class="secondary" onclick="editFieldSession('${x.id}')">Open session</button></div></div>`).join(''):'<div class="empty">No field sessions scheduled in the next 14 days.</div>';}const recapHost=document.getElementById('ccRecapReadiness');if(recapHost){const upcomingRecaps=db.weeklyRecaps.filter(r=>r.status!=='Published').sort((a,b)=>String(a.publishDate||'9999').localeCompare(String(b.publishDate||'9999')));recapHost.innerHTML=upcomingRecaps.length?upcomingRecaps.slice(0,6).map(r=>`<div class="command-item"><strong>◆ ${esc(r.fullTitle||recapFullTitle(r))}</strong><small>${esc(r.publishDate||'Unscheduled')} · ${esc(r.status||'Planning')} · ${(r.projectIds||[]).length} included projects</small><div><button class="secondary" onclick="editRecap('${r.id}')">Open recap</button></div></div>`).join(''):'<div class="empty">No weekly recaps planned yet.</div>';}renderSeriesCommandCenter();
+ renderSnapshotsDue();renderUpcomingReadiness();const fieldHost=document.getElementById('ccFieldSessions');if(fieldHost){const sessions=db.fieldSessions.filter(x=>x.date&&x.date>=todayStr&&x.date<=endStr&&x.status!=='Archived').sort((a,b)=>a.date.localeCompare(b.date));fieldHost.innerHTML=sessions.length?sessions.slice(0,6).map(x=>`<div class="command-item"><strong>☼ ${esc(x.name)}</strong><small>${esc(x.date)} ${esc(x.time||'')} · ${esc(x.location||'')} · ${esc(x.status||'Planned')}</small><div><button class="secondary" onclick="editFieldSession('${x.id}')">Open session</button></div></div>`).join(''):'<div class="empty">No field sessions scheduled in the next 14 days.</div>';}const recapHost=document.getElementById('ccRecapReadiness');if(recapHost){const upcomingRecaps=db.weeklyRecaps.filter(r=>r.status!=='Published').sort((a,b)=>String(a.publishDate||'9999').localeCompare(String(b.publishDate||'9999')));recapHost.innerHTML=upcomingRecaps.length?upcomingRecaps.slice(0,6).map(r=>`<div class="command-item"><strong>◆ ${esc(r.fullTitle||recapFullTitle(r))}</strong><small>${esc(r.publishDate||'Unscheduled')} · ${esc(r.status||'Planning')} · ${(r.projectIds||[]).length} included projects</small><div><button class="secondary" onclick="editRecap('${r.id}')">Open recap</button></div></div>`).join(''):'<div class="empty">No weekly recaps planned yet.</div>';}renderSeriesCommandCenter();
 }
 
 const PHOTO_PREPUBLISH_ITEMS=[
@@ -596,17 +629,39 @@ function publishPhotoProject(id){
  alert(`${added} photo/platform publication record(s) added. This app does not publish online.`);
 }
 
+function latestSnapshotsForAnalytics(){const by=new Map();db.snapshots.forEach(s=>{const k=s.videoId+'|'+s.window;const old=by.get(k);if(!old||String(s.snapshotDate||'')>String(old.snapshotDate||''))by.set(k,s)});return [...by.values()];}
+function analyticsFilterMatches(v){const platform=val('analyticsFilterPlatform')||'',genre=val('analyticsFilterGenre')||'',video=val('analyticsFilterVideo')||'';return (!platform||v.platform===platform)&&(!genre||(v.genre||'Other')===genre)&&(!video||v.id===video);}
+function updateAnalyticsFilterOptions(){const g=document.getElementById('analyticsFilterGenre'),v=document.getElementById('analyticsFilterVideo'),d=document.getElementById('analyticsDetailVideo');if(!g||!v||!d)return;const gv=g.value,vv=v.value,dv=d.value,genres=[...new Set(db.uploads.map(x=>x.genre||'Other'))].sort(),uploads=db.uploads.slice().sort((a,b)=>String(a.title).localeCompare(String(b.title)));g.innerHTML='<option value="">All genres</option>'+genres.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');v.innerHTML='<option value="">All videos</option>'+uploads.map(x=>`<option value="${esc(x.id)}">${esc(x.title||'Untitled')} — ${esc(x.platform)}</option>`).join('');d.innerHTML='<option value="">Choose a video…</option>'+uploads.map(x=>`<option value="${esc(x.id)}">${esc(x.title||'Untitled')} — ${esc(x.platform)}</option>`).join('');if([...g.options].some(o=>o.value===gv))g.value=gv;if([...v.options].some(o=>o.value===vv))v.value=vv;if([...d.options].some(o=>o.value===dv))d.value=dv;}
+function latestSnapshotRows(){const checkpoint=val('analyticsCompareWindow')||'24h',by=new Map();db.snapshots.filter(s=>s.window===checkpoint).forEach(s=>{const old=by.get(s.videoId);if(!old||String(s.snapshotDate||'')>String(old.snapshotDate||''))by.set(s.videoId,s)});return [...by.values()].map(s=>({s,v:db.uploads.find(v=>v.id===s.videoId)})).filter(x=>x.v&&analyticsFilterMatches(x.v));}
+function renderAnalyticsVideoDetail(){const id=val('analyticsDetailVideo'),host=document.getElementById('analyticsVideoDetail');if(!host)return;if(!id){host.innerHTML='<div class="analytics-empty">Choose a video to see its snapshot history.</div>';return;}const rows=db.snapshots.filter(s=>s.videoId===id).sort((a,b)=>String(a.snapshotDate||'').localeCompare(String(b.snapshotDate||''))||String(a.window||'').localeCompare(String(b.window||'')));const disp=(s,k)=>snapshotMetric(s,k)===null?'N/A':analyticsNumber(snapshotMetric(s,k),k);host.innerHTML=table(['Snapshot date','Checkpoint','Treatment','Views','Likes','Comments','Shares','Saves','Avg watch','Avg viewed','Completion','Followers'],rows.map(s=>`<tr><td>${esc(s.snapshotDate||'—')}</td><td>${esc(s.window==='24h'?'24 hours':s.window==='lifetime'?'Lifetime':(s.window||'')+' days')}</td><td>${esc(s.creativeTreatment==='cleanVisual'?'Clean Visual':s.creativeTreatment==='quoteOverlay'?'Quote Overlay':'Not classified')}</td><td>${disp(s,'views')}</td><td>${disp(s,'likes')}</td><td>${disp(s,'comments')}</td><td>${disp(s,'shares')}</td><td>${disp(s,'saves')}</td><td>${disp(s,'avgWatchSeconds')}</td><td>${disp(s,'avgPercentViewed')}</td><td>${disp(s,'completionRate')}</td><td>${disp(s,'followers')}</td></tr>`));}
+
+function drawAnalyticsBars(id,items,key){const host=document.getElementById(id);if(!host)return;const valid=items.filter(x=>x.value!==null&&Number.isFinite(Number(x.value)));if(!valid.length){host.innerHTML='<div class="analytics-empty">No applicable snapshot data yet.</div>';return;}const max=Math.max(1,...valid.map(x=>Number(x.value)));host.innerHTML='<div class="analytics-bars">'+valid.map(x=>`<div class="analytics-bar-row"><span>${esc(x.label)}</span><div class="analytics-bar-track"><div class="analytics-bar-fill" style="width:${Math.max(0,Number(x.value))/max*100}%"></div></div><b>${analyticsNumber(x.value,key)}</b></div>`).join('')+'</div>';}
+function drawAnalyticsLine(id,items){const host=document.getElementById(id);if(!host)return;if(items.length<2){host.innerHTML='<div class="analytics-empty">Record snapshots on at least two dates to see a trend.</div>';return;}const vals=items.map(x=>x.value),max=Math.max(1,...vals),min=Math.min(0,...vals),w=600,h=150,p=28,points=items.map((x,i)=>`${p+i*(w-2*p)/(items.length-1)},${h-p-(x.value-min)/(max-min||1)*(h-2*p)}`).join(' ');host.innerHTML=`<svg class="analytics-line" viewBox="0 0 ${w} ${h}" role="img" aria-label="Views over time"><line x1="${p}" y1="${h-p}" x2="${w-p}" y2="${h-p}" stroke="currentColor" opacity=".25"/><polyline points="${points}"/>${items.map((x,i)=>{const xx=p+i*(w-2*p)/(items.length-1),yy=h-p-(x.value-min)/(max-min||1)*(h-2*p);return `<circle cx="${xx}" cy="${yy}" r="3"><title>${esc(x.label)}: ${fmt(x.value)} views</title></circle>`}).join('')}<text x="${p}" y="${h-5}">${esc(items[0].label)}</text><text x="${w-p}" y="${h-5}" text-anchor="end">${esc(items[items.length-1].label)}</text></svg>`;}
+function selectedMetricValue(s,key){if(key==='engagement')return engagementValue(s);return snapshotMetric(s,key);}
+function renderAnalytics(){
+ if(!document.getElementById('analyticsTrendChart'))return;
+ updateAnalyticsFilterOptions();
+ const checkpoint=val('analyticsCompareWindow')||'24h';
+ const trendWindow=val('analyticsTrendWindow')||'30',trendPlatform=val('analyticsTrendPlatform')||'';let trend=latestSnapshotsForAnalytics().filter(s=>{const v=db.uploads.find(x=>x.id===s.videoId);return s.window===trendWindow&&v&&(!trendPlatform||v.platform===trendPlatform)&&analyticsFilterMatches(v)});const byDate={};trend.forEach(s=>{const d=s.snapshotDate||'Undated';(byDate[d]??=[]).push(s)});const trendItems=Object.keys(byDate).sort().map(d=>({label:d.slice(5),value:metricSum(byDate[d],'views')})).filter(x=>x.value!==null);drawAnalyticsLine('analyticsTrendChart',trendItems);document.getElementById('analyticsTrendCoverage').textContent=`${trend.length} video/platform snapshot(s) · ${trendWindow==='24h'?'24-hour':trendWindow==='lifetime'?'lifetime':trendWindow+'-day'} checkpoint · ${trendPlatform||'All platforms'}`;
+ const latest=latestSnapshotRows(),platforms=['YouTube Shorts','YouTube Long Format','Instagram','Facebook','TikTok'],toDate=viewsToDateByUpload().filter(x=>analyticsFilterMatches(x.upload));
+ const platformMetric=val('analyticsPlatformMetric')||'views';const platformItems=platforms.map(p=>{if(platformMetric==='views'){const vals=toDate.filter(x=>x.upload.platform===p).map(x=>x.views).filter(x=>x!==null);return {label:`${p} (n=${vals.length})`,value:vals.length?vals.reduce((a,b)=>a+b,0):null};}const rows=latest.filter(x=>x.v.platform===p).map(x=>x.s);const available=rows.filter(s=>selectedMetricValue(s,platformMetric)!==null).length;const value=platformMetric==='engagement'?engagementSum(rows):['avgWatchSeconds','avgPercentViewed','completionRate'].includes(platformMetric)?metricAverage(rows,platformMetric):metricSum(rows,platformMetric);return {label:`${p} (n=${available})`,value};});drawAnalyticsBars('analyticsPlatformChart',platformItems,platformMetric);document.getElementById('analyticsPlatformCoverage').textContent=platformMetric==='views'?'Views to date use each upload’s latest available snapshot. Other metrics use the selected checkpoint.':'Latest snapshot at '+checkpoint+' per video/platform; N/A values excluded. Average metrics use available entries only.';
+ const ret=val('analyticsRetentionMetric')||'avgWatchSeconds';const retItems=platforms.map(p=>{const rows=latest.filter(x=>x.v.platform===p).map(x=>x.s),n=rows.filter(s=>snapshotMetric(s,ret)!==null).length;return {label:`${p} (n=${n})`,value:metricAverage(rows,ret)};});drawAnalyticsBars('analyticsRetentionChart',retItems,ret);document.getElementById('analyticsRetentionCoverage').textContent=`Average uses only videos with a recorded value; N/A and unrecorded values are excluded. Checkpoint: ${checkpoint}.`;
+ const genre=val('analyticsGenreMetric')||'views',genres=[...new Set([...latest.map(x=>x.v.genre||'Other'),...toDate.map(x=>x.upload.genre||'Other')])];const genreItems=genres.map(g=>{if(genre==='views'){const vals=toDate.filter(x=>(x.upload.genre||'Other')===g).map(x=>x.views).filter(x=>x!==null);return {label:`${g} (n=${vals.length})`,value:vals.length?vals.reduce((a,b)=>a+b,0):null};}const rows=latest.filter(x=>(x.v.genre||'Other')===g).map(x=>x.s);const n=rows.filter(s=>selectedMetricValue(s,genre)!==null).length;return {label:`${g} (n=${n})`,value:['avgWatchSeconds','avgPercentViewed','completionRate'].includes(genre)?metricAverage(rows,genre):genre==='engagement'?engagementSum(rows):metricSum(rows,genre)};});drawAnalyticsBars('analyticsGenreChart',genreItems,genre);document.getElementById('analyticsGenreCoverage').textContent=genre==='views'?'Views to date use each video’s latest available snapshot. Other metrics use the selected checkpoint.':'Checkpoint: '+checkpoint+'. Average metrics use available values only; totals omit unavailable entries.';
+ const treatment=val('analyticsTreatmentMetric')||'views';const treatmentItems=['cleanVisual','quoteOverlay'].map(t=>{const rows=latest.filter(x=>x.s.creativeTreatment===t).map(x=>x.s);const value=['avgWatchSeconds','avgPercentViewed','completionRate'].includes(treatment)?metricAverage(rows,treatment):treatment==='engagement'?engagementAverage(rows):metricAverage(rows,treatment);return {label:t==='cleanVisual'?'Clean Visual':'Quote Overlay',value,count:rows.length};});drawAnalyticsBars('analyticsTreatmentChart',treatmentItems,treatment);document.getElementById('analyticsTreatmentCoverage').textContent=treatmentItems.map(x=>`${x.label}: ${x.count} video(s)`).join(' · ')+` · Average per video · Checkpoint: ${checkpoint}. Only classified videos are included.`;
+ const engItems=['likes','comments','shares','saves'].map(k=>{const rows=latest.map(x=>x.s),n=rows.filter(s=>snapshotMetric(s,k)!==null).length;return {label:`${k[0].toUpperCase()+k.slice(1)} (n=${n})`,value:metricSum(rows,k)};});drawAnalyticsBars('analyticsEngagementChart',engItems);document.getElementById('analyticsEngagementCoverage').textContent=`Latest snapshot at ${checkpoint} per video; available values are summed separately for each action type.`;
+ const videoMetric=val('analyticsVideoMetric')||'views',videoPlatform=val('analyticsVideoPlatform')||'';let videoRows;if(videoMetric==='views'){videoRows=toDate.filter(x=>!videoPlatform||x.upload.platform===videoPlatform).map(x=>({label:(x.upload.title||'Untitled')+' · '+x.upload.platform,value:x.views})).filter(x=>x.value!==null);}else{videoRows=latest.filter(x=>!videoPlatform||x.v.platform===videoPlatform).map(x=>({label:(x.v.title||'Untitled')+' · '+x.v.platform,value:selectedMetricValue(x.s,videoMetric)})).filter(x=>x.value!==null);}videoRows.sort((a,b)=>b.value-a.value);videoRows=videoRows.slice(0,10);drawAnalyticsBars('analyticsVideoChart',videoRows,videoMetric);document.getElementById('analyticsVideoCoverage').textContent=`Top ${videoRows.length} videos by ${videoMetric} · ${videoPlatform||'All platforms'} · ${videoMetric==='views'?'Latest available snapshot':'Checkpoint: '+checkpoint} · N/A values excluded.`;
+ renderAnalyticsVideoDetail();
+}
 function render(){
- renderCommandCenter();renderPublishingCalendar();renderFieldSessions();renderRecaps();renderSeriesManager();renderCrossPlatform();renderInsights();renderYoutubeLongAnalytics();renderPlans();renderPlanChooser();renderAssets();renderFootageUsage();updateLibrarySelects();renderBackupStatus();
+ renderCommandCenter();renderPublishingCalendar();renderFieldSessions();renderRecaps();renderSeriesManager();renderCrossPlatform();renderInsights();renderAnalytics();renderYoutubeLongAnalytics();renderPlans();renderPlanChooser();renderAssets();renderFootageUsage();updateLibrarySelects();renderBackupStatus();
  document.getElementById('ovVideos').textContent=new Set(db.uploads.map(v=>v.title+'|'+v.platform)).size;
- document.getElementById('ovViews').textContent=fmt(db.snapshots.filter(s=>s.window==='lifetime').reduce((a,s)=>a+s.views,0));
+ const toDateRows=viewsToDateByUpload();
+ document.getElementById('ovViews').textContent=fmt(toDateRows.reduce((sum,row)=>sum+(row.views===null?0:row.views),0));
  document.getElementById('ovMusic').textContent=db.music.length;document.getElementById('ovCopies').textContent=db.copies.length;
- renderChart(document.getElementById('platformChart'),platforms.map(p=>({label:p,value:db.snapshots.filter(s=>s.window==='lifetime'&&db.uploads.find(v=>v.id===s.videoId)?.platform===p).reduce((a,s)=>a+s.views,0)})));
- renderChart(document.getElementById('genreChart'),[...new Set(db.uploads.map(v=>v.genre))].map(g=>({label:g,value:db.snapshots.filter(s=>s.window==='lifetime'&&db.uploads.find(v=>v.id===s.videoId)?.genre===g).reduce((a,s)=>a+s.views,0)})));
  updateVideoSelect();renderUploads();renderSnapshots();renderTimeAnalytics();renderMonthly();renderMusic();renderCopies();renderReviews();updateWorkSelects();renderChecklist();renderProjectTools();renderPhotoStudio();
 }
-document.getElementById('exportBtn').onclick=()=>{const stamp=new Date().toISOString();localStorage.setItem('prairie-preludes-last-backup',stamp);download('prairie-preludes-backup-2.3.01-7-'+today()+'.json',JSON.stringify({app:'Prairie Preludes Creator Studio',version:'2.3.01-7',exportedAt:stamp,data:db},null,2),'application/json');renderBackupStatus()};
-document.getElementById('exportCsv').onclick=()=>{let rows=[['title','platform','publishDate','genre','url','window','snapshotDate','views','likes','comments','shares','watchMinutes','followersGained'],...db.snapshots.map(s=>{let v=db.uploads.find(x=>x.id===s.videoId)||{};return [v.title,v.platform,v.publishDate,v.genre,v.url,s.window,s.snapshotDate,s.views,s.likes,s.comments,s.shares,s.watch,s.followers]})];download('prairie-preludes-metrics-2.3.01-7-'+today()+'.csv',rows.map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(',')).join('\r\n'),'text/csv')};
+document.getElementById('exportBtn').onclick=()=>{const stamp=new Date().toISOString();localStorage.setItem('prairie-preludes-last-backup',stamp);download('prairie-preludes-backup-2.3.03-'+today()+'.json',JSON.stringify({app:'Prairie Preludes Creator Studio',version:'2.3.03',exportedAt:stamp,data:db},null,2),'application/json');renderBackupStatus()};
+document.getElementById('exportCsv').onclick=()=>{let rows=[['title','platform','publishDate','genre','url','window','snapshotDate','creativeTreatment','views','likes','comments','shares','saves','averageWatchTimeSeconds','averagePercentageViewed','completionRate','followersGained','naMetrics'],...db.snapshots.map(s=>{let v=db.uploads.find(x=>x.id===s.videoId)||{};return [v.title,v.platform,v.publishDate,v.genre,v.url,s.window,s.snapshotDate,s.creativeTreatment,...SNAPSHOT_METRICS.map(k=>snapshotMetric(s,k)),(s.naMetrics||[]).join(';')]})];download('prairie-preludes-metrics-2.3.03-'+today()+'.csv',rows.map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(',')).join('\r\n'),'text/csv')};
 function download(name,data,type){let a=document.createElement('a'),u=URL.createObjectURL(new Blob([data],{type}));a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);document.getElementById('backupMsg').textContent='Export started: '+name}
 function normalizeIncoming(x){let incoming=x?.data||x;if(incoming.videos&&!incoming.uploads){let uploads=[],snapshots=[];incoming.videos.forEach(v=>{let u={id:v.id||crypto.randomUUID(),title:v.title,publishDate:v.publishDate,genre:v.genre,url:v.url,platform:v.platform};uploads.push(u);snapshots.push({id:crypto.randomUUID(),videoId:u.id,window:v.window||'24h',snapshotDate:v.snapshotDate||v.publishDate,views:v.views||0,likes:v.likes||0,comments:v.comments||0,shares:v.shares||0,watch:v.watch||0,followers:v.followers||0})});incoming={...incoming,uploads,snapshots}}const normalized={...blank(),...incoming,uploads:Array.isArray(incoming.uploads)?incoming.uploads:[],snapshots:Array.isArray(incoming.snapshots)?incoming.snapshots:[],music:Array.isArray(incoming.music)?incoming.music:[],copies:Array.isArray(incoming.copies)?incoming.copies:[],reviews:Array.isArray(incoming.reviews)?incoming.reviews:[],plans:Array.isArray(incoming.plans)?incoming.plans.map(p=>({...p,seriesId:p.seriesId||''})):[],series:Array.isArray(incoming.series)?incoming.series:[],photos:Array.isArray(incoming.photos)?incoming.photos:[],photoUsage:Array.isArray(incoming.photoUsage)?incoming.photoUsage:[],fieldSessions:Array.isArray(incoming.fieldSessions)?incoming.fieldSessions:[],weeklyRecaps:Array.isArray(incoming.weeklyRecaps)?incoming.weeklyRecaps:[],recapTitles:Array.isArray(incoming.recapTitles)?incoming.recapTitles:[],assets:Array.isArray(incoming.assets)?incoming.assets.map(a=>({...a,recordingSpeed:a.recordingSpeed||'1'})):[],evidence:incoming.evidence&&typeof incoming.evidence==='object'?incoming.evidence:{}};normalized.music=ensureMusicInternalIds(normalized.music);return normalized;}
 function mergeRecords(current,incoming){const out={...current};['uploads','snapshots','music','copies','reviews','plans','assets','series','photos','photoUsage','fieldSessions','weeklyRecaps','recapTitles'].forEach(k=>{const seen=new Set((out[k]||[]).map(x=>x.id));(incoming[k]||[]).forEach(item=>{if(!seen.has(item.id)){out[k].push(item);seen.add(item.id)}})});out.music=ensureMusicInternalIds(out.music);out.evidence={...incoming.evidence,...current.evidence};return out}
@@ -634,7 +689,7 @@ function renderBackupStatus(){
 }
 document.getElementById('clearBtn').onclick=()=>{if(confirm('Permanently clear all Creator Studio data from this browser? Export a backup first if needed.')){db=blank();save();document.getElementById('backupMsg').textContent='All local data cleared.'}};
 
-function localToday(){return localDateString(new Date());}
+function localToday(){return denverDateString(new Date());}
 function dateObj(s){const [y,m,d]=String(s||'').split('-').map(Number);return y&&m&&d?new Date(y,m-1,d):null;}
 function dateStr(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function addDays(d,n){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()+n);return x;}
