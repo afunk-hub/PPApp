@@ -33,3 +33,9 @@
 - Editing updates the existing snapshot in place, preserving its upload/platform association, checkpoint, and record ID; it does not create a duplicate or clear another platform's checkpoint.
 - The snapshot date and metric values can be corrected. Upload/platform and checkpoint selectors are locked while editing to protect the original association.
 - Legacy watch-minute values remain intact when editing older snapshots that do not have an average-watch-seconds value.
+
+## Follow-up correction (personal build -7)
+- Analytics Overview now reports **Views to Date** using the most recently recorded snapshot for each individual upload/platform entry, regardless of checkpoint type.
+- Overall views, views by platform, and views by genre all use the same latest-snapshot-per-upload calculation.
+- Performance Insights now ranks and calculates its metrics from each upload/platform entry's most recently recorded snapshot, rather than requiring a lifetime checkpoint.
+- Adding or editing a snapshot automatically changes the latest-snapshot contribution on the next dashboard render; snapshots are not summed across checkpoints for the same upload.

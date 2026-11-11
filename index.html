@@ -213,13 +213,13 @@ if ("serviceWorker" in navigator && location.protocol !== "file:") {
 <h2>Studio overview</h2>
 <div class="grid">
 <div class="card span3"><div class="sub">Videos tracked</div><div class="metric" id="ovVideos">0</div></div>
-<div class="card span3"><div class="sub">Lifetime views</div><div class="metric" id="ovViews">0</div></div>
+<div class="card span3"><div class="sub">Views to date</div><div class="metric" id="ovViews">0</div></div>
 <div class="card span3"><div class="sub">Original works</div><div class="metric" id="ovMusic">0</div></div>
 <div class="card span3"><div class="sub">Copying cases</div><div class="metric" id="ovCopies">0</div></div>
-<div class="card span6"><h3>Lifetime views by platform</h3><div id="platformChart"></div></div>
-<div class="card span6"><h3>Lifetime views by genre</h3><div id="genreChart"></div></div>
+<div class="card span6"><h3>Views to date by platform</h3><div id="platformChart"></div></div>
+<div class="card span6"><h3>Views to date by genre</h3><div id="genreChart"></div></div>
 <div class="card"><div class="row" style="justify-content:space-between;align-items:end"><div><h3>YouTube Long Format analytics</h3><p class="sub">Weekly recaps are reported separately and remain included in the combined YouTube Long Format totals.</p></div><div class="field" style="max-width:230px"><label for="ytLongCategory">Content category</label><select id="ytLongCategory"><option value="all">All YouTube Long Format</option><option value="standaloneLongForm">Standalone long-form only</option><option value="weeklyRecap">Weekly recaps only</option></select></div><div class="field" style="max-width:180px"><label for="ytLongWindow">Snapshot period</label><select id="ytLongWindow"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option><option value="lifetime">Lifetime</option></select></div></div><div class="grid"><div class="card span3"><div class="sub">Upload records</div><div class="metric" id="ytLongUploads">0</div></div><div class="card span3"><div class="sub">Views</div><div class="metric" id="ytLongViews">0</div></div><div class="card span3"><div class="sub">Engagement actions</div><div class="metric" id="ytLongEngagement">0</div></div><div class="card span3"><div class="sub">Average watch time (seconds)</div><div class="metric" id="ytLongWatch">0</div></div><div class="card span3"><div class="sub">Subscribers gained</div><div class="metric" id="ytLongSubscribers">0</div></div></div><div class="sub" id="ytLongSnapshotCoverage"></div><div class="tablewrap" id="ytLongAnalyticsTable"></div></div>
-<div class="card"><div class="row" style="justify-content:space-between;align-items:center"><h3>Performance insights</h3><div class="field" style="max-width:210px"><label for="insightMetric">Rank videos by</label><select id="insightMetric"><option value="views">Lifetime views</option><option value="engagement">Engagement actions</option><option value="engagementRate">Engagement rate</option><option value="followerRate">Followers per 1,000 views</option><option value="followers">Followers gained</option><option value="watch">Legacy watch minutes</option><option value="avgWatchSeconds">Average watch time (seconds)</option></select></div></div><div id="insightsTable"></div><p class="sub">Uses the latest lifetime snapshot per platform entry. Rankings are descriptive, not proof that a particular creative choice caused performance.</p></div>
+<div class="card"><div class="row" style="justify-content:space-between;align-items:center"><h3>Performance insights</h3><div class="field" style="max-width:210px"><label for="insightMetric">Rank videos by</label><select id="insightMetric"><option value="views">Views to date</option><option value="engagement">Engagement actions</option><option value="engagementRate">Engagement rate</option><option value="followerRate">Followers per 1,000 views</option><option value="followers">Followers gained</option><option value="watch">Legacy watch minutes</option><option value="avgWatchSeconds">Average watch time (seconds)</option></select></div></div><div id="insightsTable"></div><p class="sub">Uses the most recently recorded snapshot for each upload/platform entry, regardless of checkpoint. Rankings are descriptive, not proof that a particular creative choice caused performance.</p></div>
 <div class="card"><h3>Studio workflow</h3><div class="notice">Record a snapshot after publishing, using the same 7-, 30-, and 90-day checkpoints for every platform. Save source files, dated exports, and screenshots as evidence. This app stores records on this device until you export a backup. Version 2.3.00 adds field session planning and weekly recap production. Version 2.3.01 reorganizes navigation and backup controls while preserving existing projects and asset IDs. The composition/recording form no longer displays the automatically generated internal ID; IDs continue to be generated and stored automatically.</div></div>
 </div>
 </section>
@@ -623,12 +623,28 @@ function renderYoutubeLongAnalytics(){
  document.getElementById('ytLongAnalyticsTable').innerHTML=table(['Upload','Category','Published','Views','Likes','Comments','Shares','Avg watch sec','Followers','Snapshot date'],rows.sort((a,b)=>String(b.video.publishDate||'').localeCompare(String(a.video.publishDate||''))).map(({video:v,s})=>{const recap=db.weeklyRecaps.find(r=>r.id===v.weeklyRecapId),label=(v.contentCategory==='weeklyRecap'||v.weeklyRecapId)?'Weekly recap':'Standalone long-form';return `<tr><td><b>${esc(v.title||'Untitled upload')}</b>${recap?`<div class="sub">${esc(recap.fullTitle||recapFullTitle(recap))}</div>`:''}${v.url?`<div class="sub"><a href="${esc(v.url)}" target="_blank" rel="noopener">Open YouTube video</a></div>`:''}</td><td>${label}</td><td>${esc(v.publishDate||'—')}</td><td>${s?fmt(s.views):'—'}</td><td>${s?fmt(s.likes):'—'}</td><td>${s?fmt(s.comments):'—'}</td><td>${s?fmt(s.shares):'—'}</td><td>${s?(s.avgWatchSeconds!==undefined?fmt(s.avgWatchSeconds):'—'):'—'}</td><td>${s?fmt(s.followers):'—'}</td><td>${esc(s?.snapshotDate||'No snapshot')}</td></tr>`;}));
 }
 
+function latestSnapshotByUpload(){
+ const latest=new Map();
+ db.snapshots.forEach(s=>{
+  const old=latest.get(s.videoId);
+  const stamp=String(s.snapshotDate||'');
+  const oldStamp=String(old?.snapshotDate||'');
+  if(!old||stamp>=oldStamp)latest.set(s.videoId,s);
+ });
+ return latest;
+}
+function viewsToDateByUpload(){
+ const latest=latestSnapshotByUpload(),rows=[];
+ latest.forEach((snapshot,videoId)=>{
+  const upload=db.uploads.find(v=>v.id===videoId);
+  if(upload)rows.push({upload,snapshot,views:Number(snapshot.views||0)});
+ });
+ return rows;
+}
 function renderInsights(){
  const metric=val('insightMetric');
- const latest={};
- db.snapshots.filter(s=>s.window==='lifetime').forEach(s=>{const old=latest[s.videoId];if(!old||String(s.snapshotDate||'')>String(old.snapshotDate||''))latest[s.videoId]=s});
- const rows=Object.entries(latest).map(([id,s])=>{const v=db.uploads.find(x=>x.id===id)||{};const views=Number(s.views||0),engagement=Number(s.likes||0)+Number(s.comments||0)+Number(s.shares||0),followers=Number(s.followers||0);return {title:v.title||'Untitled video',platform:v.platform||'Unknown',contentCategory:v.contentCategory||(v.weeklyRecapId?'weeklyRecap':'standaloneLongForm'),date:v.publishDate||'',views,engagement,engagementRate:views?engagement/views*100:0,followerRate:views?followers/views*1000:0,followers,watch:Number(s.watch||0),avgWatchSeconds:Number(s.avgWatchSeconds||0),snapshotDate:s.snapshotDate||''}}).sort((a,b)=>b[metric]-a[metric]).slice(0,10);
- document.getElementById('insightsTable').innerHTML=table(['Video / platform','Publish date','Metric','Snapshot date'],rows.map(r=>`<tr><td><b>${esc(r.title)}</b><div class="sub">${esc(r.platform)}${r.platform==='YouTube Long Format' ? ' · '+(r.contentCategory==='weeklyRecap'?'Weekly recap':'Standalone long-form') : ''}</div></td><td>${esc(r.date||'—')}</td><td>${metric==='engagementRate'?r[metric].toFixed(2)+'%':metric==='followerRate'?r[metric].toFixed(2):fmt(r[metric])+(metric==='engagement'?' actions':metric==='watch'?' legacy min':metric==='avgWatchSeconds'?' sec':'')}</td><td>${esc(r.snapshotDate||'—')}</td></tr>`));
+ const rows=viewsToDateByUpload().map(({upload:v,snapshot:s,views})=>{const engagement=Number(s.likes||0)+Number(s.comments||0)+Number(s.shares||0),followers=Number(s.followers||0);return {title:v.title||'Untitled video',platform:v.platform||'Unknown',contentCategory:v.contentCategory||(v.weeklyRecapId?'weeklyRecap':'standaloneLongForm'),date:v.publishDate||'',views,engagement,engagementRate:views?engagement/views*100:0,followerRate:views?followers/views*1000:0,followers,watch:Number(s.watch||0),avgWatchSeconds:Number(s.avgWatchSeconds||0),snapshotDate:s.snapshotDate||'',checkpoint:s.window||''}}).sort((a,b)=>(Number(b[metric])||0)-(Number(a[metric])||0)).slice(0,10);
+ document.getElementById('insightsTable').innerHTML=table(['Video / platform','Publish date','Metric','Latest snapshot'],rows.map(r=>`<tr><td><b>${esc(r.title)}</b><div class="sub">${esc(r.platform)}${r.platform==='YouTube Long Format' ? ' · '+(r.contentCategory==='weeklyRecap'?'Weekly recap':'Standalone long-form') : ''}</div></td><td>${esc(r.date||'—')}</td><td>${metric==='engagementRate'?r[metric].toFixed(2)+'%':metric==='followerRate'?r[metric].toFixed(2):fmt(r[metric])+(metric==='engagement'?' actions':metric==='watch'?' legacy min':metric==='avgWatchSeconds'?' sec':'')}</td><td>${esc(r.snapshotDate||'—')}<div class="sub">${esc(r.checkpoint==='24h'?'24 hours':r.checkpoint==='lifetime'?'Lifetime':r.checkpoint?r.checkpoint+' days':'')}</div></td></tr>`));
 }
 function updateLibrarySelects(){
  const options=(items,empty)=>`<option value="">${empty}</option>`+items.map(x=>`<option value="${esc(x.id)}">${esc(x.title)}</option>`).join('');
@@ -1049,10 +1065,12 @@ function publishPhotoProject(id){
 function render(){
  renderCommandCenter();renderPublishingCalendar();renderFieldSessions();renderRecaps();renderSeriesManager();renderCrossPlatform();renderInsights();renderYoutubeLongAnalytics();renderPlans();renderPlanChooser();renderAssets();renderFootageUsage();updateLibrarySelects();renderBackupStatus();
  document.getElementById('ovVideos').textContent=new Set(db.uploads.map(v=>v.title+'|'+v.platform)).size;
- document.getElementById('ovViews').textContent=fmt(db.snapshots.filter(s=>s.window==='lifetime').reduce((a,s)=>a+s.views,0));
+ const toDateRows=viewsToDateByUpload();
+ document.getElementById('ovViews').textContent=fmt(toDateRows.reduce((sum,row)=>sum+row.views,0));
  document.getElementById('ovMusic').textContent=db.music.length;document.getElementById('ovCopies').textContent=db.copies.length;
- renderChart(document.getElementById('platformChart'),platforms.map(p=>({label:p,value:db.snapshots.filter(s=>s.window==='lifetime'&&db.uploads.find(v=>v.id===s.videoId)?.platform===p).reduce((a,s)=>a+s.views,0)})));
- renderChart(document.getElementById('genreChart'),[...new Set(db.uploads.map(v=>v.genre))].map(g=>({label:g,value:db.snapshots.filter(s=>s.window==='lifetime'&&db.uploads.find(v=>v.id===s.videoId)?.genre===g).reduce((a,s)=>a+s.views,0)})));
+ renderChart(document.getElementById('platformChart'),platforms.map(p=>({label:p,value:toDateRows.filter(row=>row.upload.platform===p).reduce((sum,row)=>sum+row.views,0)})));
+ const genreNames=[...new Set(toDateRows.map(row=>row.upload.genre||'Other'))];
+ renderChart(document.getElementById('genreChart'),genreNames.map(g=>({label:g,value:toDateRows.filter(row=>(row.upload.genre||'Other')===g).reduce((sum,row)=>sum+row.views,0)})));
  updateVideoSelect();renderUploads();renderSnapshots();renderTimeAnalytics();renderMonthly();renderMusic();renderCopies();renderReviews();updateWorkSelects();renderChecklist();renderProjectTools();renderPhotoStudio();
 }
 document.getElementById('exportBtn').onclick=()=>{const stamp=new Date().toISOString();localStorage.setItem('prairie-preludes-last-backup',stamp);download('prairie-preludes-backup-2.3.02-'+today()+'.json',JSON.stringify({app:'Prairie Preludes Creator Studio',version:'2.3.02',exportedAt:stamp,data:db},null,2),'application/json');renderBackupStatus()};
