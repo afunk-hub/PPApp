@@ -16,3 +16,8 @@
 - Fixed the Command Center rendering connection so the Snapshots Due Today list is actually refreshed and displayed when the dashboard renders.
 - Overdue, unrecorded checkpoints remain visible and are now highlighted with red text and an explicit OVERDUE label.
 - Snapshot tracking remains independent for each upload/platform record and checkpoint; recording one platform's snapshot does not clear another platform's checkpoint.
+
+## Follow-up correction (personal build -4)
+- Reordered the Snapshots Due Today dashboard columns to: Add Snapshot, Video title, Platform, Checkpoint, Published date.
+- Removed the due-date column; overdue checkpoints remain highlighted in red and marked OVERDUE.
+- Constrained the snapshot table to the dashboard width, with horizontal scrolling on narrower screens.
