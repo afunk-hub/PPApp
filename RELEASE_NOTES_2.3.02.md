@@ -11,3 +11,8 @@
 - Existing local data structure and JSON backup/import compatibility are preserved.
 - Deploy using `index.html` as the application entry point.
 - The app UI continues to display version 2.3.02. The ZIP suffix is for personal build tracking only.
+
+## Follow-up correction (personal build -3)
+- Fixed the Command Center rendering connection so the Snapshots Due Today list is actually refreshed and displayed when the dashboard renders.
+- Overdue, unrecorded checkpoints remain visible and are now highlighted with red text and an explicit OVERDUE label.
+- Snapshot tracking remains independent for each upload/platform record and checkpoint; recording one platform's snapshot does not clear another platform's checkpoint.
