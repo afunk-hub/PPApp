@@ -174,6 +174,7 @@ if ("serviceWorker" in navigator && location.protocol !== "file:") {
 <div class="command-metric"><div class="sub">Unused footage</div><div class="command-value" id="ccUnused">0</div><div class="sub">Not linked to uploads</div></div>
 <div class="command-metric"><div class="sub">Published uploads</div><div class="command-value" id="ccPublished">0</div><div class="sub">Platform entries</div></div>
 </div></div>
+<div class="command-card full"><h3>Snapshots Due Today</h3><p class="sub">Shows unrecorded 24-hour, 7-day, 30-day, and 90-day checkpoints due today or overdue. Publication time is ignored.</p><div id="ccSnapshotsDue"><div class="empty">No snapshots due today.</div></div></div>
 <div class="command-card full"><div class="row" style="justify-content:space-between;align-items:center"><h3>Publishing schedule</h3><button class="secondary" onclick="openTab(&quot;calendar&quot;)">Open monthly calendar</button></div><div id="ccScheduleSummary" class="schedule-summary"></div><div class="sub" id="ccScheduleNext" style="margin-top:8px"></div></div>
 <div class="command-card full"><h3>Upcoming Video Readiness · Next 14 Days</h3><p class="sub">Shows planned video projects with their audio, video, and caption assignment status.</p><div id="ccReadinessSummary" class="schedule-summary"></div><div id="ccReadiness" class="command-list"></div></div>
 <div class="command-card full"><h3>Upcoming Photo Readiness · Next 14 Days</h3><p class="sub">Shows planned photo projects with their photo and caption assignment status.</p><div id="ccPhotoReadinessSummary" class="schedule-summary"></div><div id="ccPhotoReadiness" class="command-list"></div></div>
@@ -489,7 +490,8 @@ function save(){
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function val(id){return document.getElementById(id).value}
 function num(id){return Number(val(id)||0)}
-function today(){return new Date().toISOString().slice(0,10)}
+function denverDateString(d=new Date()){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Denver',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d);const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));return `${p.year}-${p.month}-${p.day}`;}
+function today(){return denverDateString()}
 function fmt(n){return Number(n||0).toLocaleString()}
 function table(headers,rows){if(!rows.length)return '<div class="empty">Nothing recorded yet.</div>';return '<table><thead><tr>'+headers.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table>'}
 function openTab(tab){document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));document.querySelectorAll('.nav-dropdown').forEach(d=>{d.open=false;});document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===tab));window.scrollTo({top:0,behavior:'smooth'});}
@@ -806,7 +808,7 @@ function renderFootageUsage(){
 
 let calendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
 let calendarSelectedDate=localDateString(new Date());
-function localDateString(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function localDateString(d){return denverDateString(d);}
 function isFuturePublishDate(date){return !!date&&date>localDateString(new Date());}
 function rejectFuturePublishedDate(date,kind='project'){if(isFuturePublishDate(date)){alert(`A ${kind} cannot be marked as published on a future date. Choose today or an earlier date, or keep it in a pre-publication stage.`);return true;}return false;}
 function preparednessWeight(status){return status==='Ready to publish'?2:1;}
@@ -856,6 +858,30 @@ function selectCalendarDate(date,compact=false){calendarSelectedDate=date;render
 function changeCalendarMonth(delta){calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()+delta,1);renderPublishingCalendar();}
 function goCalendarToday(){const now=new Date();calendarMonth=new Date(now.getFullYear(),now.getMonth(),1);calendarSelectedDate=localDateString(now);renderPublishingCalendar();}
 
+function snapshotDueItems(){
+ const todayStr=localToday(),days=[['24h',1],['7',7],['30',30],['90',90]],items=[];
+ db.uploads.forEach(v=>{
+  if(!v.publishDate)return;
+  const published=dateObj(v.publishDate);if(!published)return;
+  days.forEach(([window,n])=>{
+   const due=dateStr(addDays(published,n));
+   const recorded=db.snapshots.some(s=>s.videoId===v.id&&s.window===window);
+   if(!recorded&&due<=todayStr)items.push({video:v,window,due,overdue:due<todayStr});
+  });
+ });
+ return items.sort((a,b)=>a.due.localeCompare(b.due)||a.video.title.localeCompare(b.video.title)||a.window.localeCompare(b.window));
+}
+function startSnapshotEntry(videoId,window){
+ updateVideoSelect();
+ const videoSelect=document.getElementById('sVideo'),windowSelect=document.getElementById('sWindow');
+ videoSelect.value=videoId;windowSelect.value=window;document.getElementById('sDate').value=today();
+ openTab('snapshots');document.getElementById('sViews').focus();
+}
+function renderSnapshotsDue(){
+ const host=document.getElementById('ccSnapshotsDue');if(!host)return;
+ const items=snapshotDueItems();
+ host.innerHTML=items.length?table(['Video','Platform','Published','Checkpoint','Due',''],items.map(x=>`<tr><td><b>${esc(x.video.title)}</b></td><td>${esc(x.video.platform)}</td><td>${esc(x.video.publishDate)}</td><td>${esc(x.window==='24h'?'24 hours':x.window+' days')}</td><td>${esc(x.due)}${x.overdue?' <span class="sub">(overdue)</span>':''}</td><td><button class="primary" onclick="startSnapshotEntry('${x.video.id}','${x.window}')">Add Snapshot</button></td></tr>`)):'<div class="empty">No snapshots due today.</div>';
+}
 function renderCommandCenter(){
  const active=db.plans.filter(p=>!['Published','Entries created'].includes(p.status));
  const todayStr=localToday(),end=new Date();end.setDate(end.getDate()+14);const endStr=localDateString(end);
@@ -1053,7 +1079,7 @@ function renderBackupStatus(){
 }
 document.getElementById('clearBtn').onclick=()=>{if(confirm('Permanently clear all Creator Studio data from this browser? Export a backup first if needed.')){db=blank();save();document.getElementById('backupMsg').textContent='All local data cleared.'}};
 
-function localToday(){return localDateString(new Date());}
+function localToday(){return denverDateString(new Date());}
 function dateObj(s){const [y,m,d]=String(s||'').split('-').map(Number);return y&&m&&d?new Date(y,m-1,d):null;}
 function dateStr(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function addDays(d,n){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()+n);return x;}
