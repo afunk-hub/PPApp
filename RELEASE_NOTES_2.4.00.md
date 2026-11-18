@@ -1,19 +1,18 @@
 # Prairie Preludes Creator Studio 2.4.00
 
-## Projects and Planner workflow update
-
-- Added a Projects dashboard entry in Workspace with Activity Overview, two-week preparedness, publishing calendar, and upcoming Active Projects.
-- Relocated the visible monthly calendar workflow into Projects while retaining the existing calendar rendering and date-detail behavior.
-- Calendar project markers are displayed as elongated bars with equal 50/50 series-color and publishing-stage-color halves.
-- Updated the preparedness indicator to use Prairie Preludes Dusty Rose, Golden Wheat, and Prairie Sage colors while retaining the existing weighted scoring calculation.
-- Added a storytelling caption count to Plan a Video, with dynamically generated numbered caption fields.
-- Added multiple footage associations to video projects while retaining the legacy primary asset reference for compatibility.
-- Updated application version and backup export version to 2.4.00.
+## Projects and Planner workflow corrections
+- Moved the video and photo project planning/editing forms into the Projects dashboard, after the dashboard overview, preparedness, calendar, and Active Projects sections.
+- The Projects dashboard's New Project action now opens the project planning workflow in Projects.
+- Editing existing video and photo projects now returns to Projects rather than opening the Planner tab.
+- Reorganized Planner into three internal sections: Upload Builder, Publishing Checklist, and Catalog. Only one section is displayed at a time.
+- Kept the existing Workspace / Performance / Rights & Records top-level dropdown navigation structure and styling.
+- Set standard video project platform defaults to YouTube Shorts, Instagram, Facebook, and TikTok; YouTube Long Format remains available as an optional selection.
 
 ## Compatibility
+- Existing project records, upload records, footage references, and local database structure are retained.
+- No historical publishing records are rewritten by this interface reorganization.
 
-Existing local database keys and record structures are retained. New project fields are additive (`assetIds`, `storyCount`, and `storyCaptions`); existing `assetId` remains supported. Existing publishing records, snapshots, footage records, and analytics data are not intentionally rewritten.
-
-## Notes
-
-This release preserves the existing main navigation dropdown styling and Command Center placement. The Projects dashboard and Planner workflow are an initial implementation of the agreed redesign; existing project editing and publishing workflows remain available.
+## Validation status
+- JavaScript syntax check passed.
+- ZIP integrity check performed after packaging.
+- Interactive browser testing and live-data migration testing remain outstanding; test on a copy of the app before replacing the live deployment.
