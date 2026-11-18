@@ -587,8 +587,10 @@ function applyUploadProject(key, preserveDate=false){const el=document.getElemen
 }
 function updateUploadCategoryUI(){
  const platform=val('uPlatform'),isLong=platform==='YouTube Long Format';
- document.getElementById('uLongCategoryRow').hidden=!isLong;
- document.getElementById('uWeeklyRecapField').hidden=!(isLong&&val('uContentCategory')==='weeklyRecap');
+ const categoryRow=document.getElementById('uLongCategoryRow');
+ if(categoryRow)categoryRow.hidden=!isLong;
+ const label=document.getElementById('uLongCategoryLabel');
+ if(label)label.textContent=val('uProject').startsWith('recap:')?'Weekly recap':'Standalone long-form video';
 }
 function updateWeeklyRecapSelect(selected=''){
  const el=document.getElementById('uWeeklyRecap');if(!el)return;el.innerHTML='<option value="">Choose a weekly recap…</option>'+db.weeklyRecaps.slice().sort((a,b)=>String(b.publishDate||'').localeCompare(String(a.publishDate||''))).map(r=>`<option value="${esc(r.id)}">${esc(r.fullTitle||recapFullTitle(r))}${r.publishDate?' · '+esc(r.publishDate):''}</option>`).join('');
@@ -614,7 +616,7 @@ document.getElementById('uploadForm').addEventListener('submit',e=>{
  if(editingUploadId){const old=db.uploads.find(v=>v.id===editingUploadId);if(!old){alert('The upload record could not be found.');resetUploadForm();return;}Object.assign(old,common,{platform:chosen,contentCategory:category,weeklyRecapId:recapId||''});}
  else targets.forEach(platform=>db.uploads.push({id:crypto.randomUUID(),...common,platform,contentCategory:platform==='YouTube Long Format'?category:'other',weeklyRecapId:platform==='YouTube Long Format'?recapId||'':''}));
  const recap=recapId?db.weeklyRecaps.find(r=>r.id===recapId):null;if(recap){recap.youtubeUrl=common.url||recap.youtubeUrl||'';recap.publishDate=common.publishDate||recap.publishDate||'';}
- resetUploadForm();save();
+ save();resetUploadForm();
 });
 document.getElementById('resetUpload').onclick=resetUploadForm;
 document.getElementById('snapshotFilter').onchange=renderSnapshots;

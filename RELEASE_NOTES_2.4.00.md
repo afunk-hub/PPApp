@@ -24,3 +24,9 @@
 - Project changes reset platform defaults and associated metadata. Weekly Recap selections are restricted to YouTube Long Format.
 - Upload records retain project and music references, all associated footage IDs, and the legacy singular footage ID for compatibility.
 - The Video Entries table now displays the automatic content-treatment classification.
+
+## Video entry save correction
+- Fixed the Video Uploads form's category-visibility handler, which referenced a nonexistent element and could interrupt the form reset sequence.
+- Persist the newly created or updated upload records before resetting the form, preventing the reset handler from blocking the save operation.
+- Removed the obsolete linked-recap-field visibility reference; Weekly Recap association continues to come directly from the selected Weekly Recap project.
+- Rechecked the embedded application script and the synchronized `inline.js` copy with Node.js syntax validation.
